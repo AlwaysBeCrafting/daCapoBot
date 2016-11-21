@@ -1,0 +1,7 @@
+new playlist
+set directory location? read from config file?
+read list of files from directory into array
+public readable map? no just an array, output array list with position + 1,
+    call section with position - 1
+
+eventually set it to use a sqllite db for upvote/downvote, skip count ...

@@ -1,5 +1,7 @@
 package stream.alwaysbecrafting.daCapoBot;
 
+import java.io.File;
+
 import javazoom.jl.player.advanced.AdvancedPlayer;
 import javazoom.jl.player.advanced.PlaybackEvent;
 import javazoom.jl.player.advanced.PlaybackListener;
@@ -21,7 +23,7 @@ public class SoundJLayer extends PlaybackListener implements Runnable {
 			try{
 				String urlAsString =
 						"file:///"
-								+ new java.io.File( "." ).getCanonicalPath()
+								+ new File( "." ).getCanonicalPath()
 								+ "/"
 								+ this.filePath;
 				this.player = new AdvancedPlayer(
