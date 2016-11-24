@@ -3,6 +3,10 @@ package stream.alwaysbecrafting.daCapoBot;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
+
+import static java.lang.String.format;
 
 //==============================================================================
 public class Playlist {
@@ -21,18 +25,32 @@ public class Playlist {
 	}
 
 
-	public void Playlist( String path ) {
+	public Playlist( String path ) {
 		this.f = new File( path );
-		this.playlist = new ArrayList<String>( Arrays.asList( f.list() ) );
+		this.playlist = new ArrayList<String>( Arrays.asList( f.list( )  ));
+		Collections.sort(playlist, String.CASE_INSENSITIVE_ORDER);
+		for ( Iterator<String> it = playlist.iterator(); it.hasNext();) {
+			if (!it.next().contains(".mp3"))
+				it.remove(); // NOTE: Iterator's remove method, not ArrayList's, is used.
+		}
+//		for ( File i:f.listFiles()
+//		       ) {
+//			System.out.println(i);
+//
+//		}
+
 
 		for ( int i = 0; i < playlist.size(); i++ ) {
 			System.out.format( "%d %s\n", i + 1, playlist.get( i ) );
 		}
-//		for ( String index : playlist
+////		for ( String index : playlist
 //				) {
 //			System.out.println( (playlist.indexOf( index ) + 1) + " " + index );
 //
 //		}
+		if ( !shuffle ) {
+			new Player( format( "%s/%s", f.toURI(), playlist.get( 0 ) )).play();
+		}
 	}
 
 	public void Play() {
