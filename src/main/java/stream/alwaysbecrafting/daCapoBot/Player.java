@@ -15,6 +15,7 @@ public class Player extends PlaybackListener implements Runnable{
 	public Player( String filePath ){
 		this.filePath = filePath;
 	}
+
 	public void play() {
 		try {
 			player = new AdvancedPlayer(
@@ -26,6 +27,7 @@ public class Player extends PlaybackListener implements Runnable{
 			ex.printStackTrace();
 		}
 	}
+
 	public void run(){
 		try {
 			this.player.play();
@@ -34,6 +36,10 @@ public class Player extends PlaybackListener implements Runnable{
 		{
 			ex.printStackTrace();
 		}
+	}
+
+	public void next() {
+
 	}
 
 
