@@ -2,6 +2,7 @@ package stream.alwaysbecrafting.daCapoBot;
 
 import java.io.FileInputStream;
 
+import javazoom.jl.decoder.JavaLayerException;
 import javazoom.jl.player.advanced.AdvancedPlayer;
 import javazoom.jl.player.advanced.PlaybackListener;
 
@@ -13,20 +14,31 @@ public class Player extends PlaybackListener{
 	private AdvancedPlayer player;
 	private Thread playerThread;
 	private boolean playerRunning = false;
+	private Track currentTrack;
+	private Playlist currentPlaylist;
 
-	public void play(Track track) {
+	//--------------------------------------------------------------------------
+	public void setPlaylist(Playlist currentPlaylist){
+		this.currentPlaylist = currentPlaylist;
+		currentTrack = currentPlaylist.getTrack( 0 );
+	}
+
+	//--------------------------------------------------------------------------
+
+	public void play() {
 		try {
 			if( playerRunning ){
 				player.close();
 			}
 			player = new AdvancedPlayer(
-					new FileInputStream( track.file ), systemRegistry().createAudioDevice() );
+					new FileInputStream( currentTrack.file ), systemRegistry().createAudioDevice() );
 
 			playerThread = new Thread(
 					() -> {
 							try {
 								this.player.play();
-							} catch ( javazoom.jl.decoder.JavaLayerException ex ) {
+								nextTrack();
+							} catch ( JavaLayerException ex ) {
 								ex.printStackTrace();
 							}
 					}
@@ -34,12 +46,16 @@ public class Player extends PlaybackListener{
 
 			playerThread.start();
 			playerRunning = true;
+
+
 		} catch ( Exception ex ) {
 			ex.printStackTrace();
 		}
 	}
 
-	public void next() {
+	//--------------------------------------------------------------------------
+
+	public void nextTrack() {
 
 	}
 

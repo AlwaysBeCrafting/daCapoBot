@@ -47,6 +47,10 @@ public class Playlist {
 	public Track getTrack(int index){
 		return tracks.get(index);
 	}
+
+	public Track nextInList(Track currentTrack){
+		return tracks.get( (tracks.indexOf( currentTrack ) + 1) % tracks.size() );
+	}
 }
 
 //------------------------------------------------------------------------------
