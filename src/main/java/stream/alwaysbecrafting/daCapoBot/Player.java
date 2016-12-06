@@ -1,5 +1,7 @@
 package stream.alwaysbecrafting.daCapoBot;
 
+import java.io.FileInputStream;
+
 import javazoom.jl.player.advanced.AdvancedPlayer;
 import javazoom.jl.player.advanced.PlaybackListener;
 
@@ -15,10 +17,12 @@ public class Player extends PlaybackListener implements Runnable{
 	public void play(Track track) {
 		try {
 			player = new AdvancedPlayer(
-					new java.net.URL(track.file.toString()).openStream(),
+					new FileInputStream( track.file ),
 					systemRegistry().createAudioDevice() );
 			playerThread = new Thread( this, "AudioPlayerThread" );
+
 			playerThread.start();
+
 		} catch ( Exception ex ) {
 			ex.printStackTrace();
 		}

@@ -36,11 +36,16 @@ public class Playlist {
 
 	public void shuffle() {
 		Collections.shuffle(tracks);
+
 	}
 
 	public void sort() {
-		//tracks.sort( Track::compareTo );
+	
 
+	}
+
+	public Track getTrack(int index){
+		return tracks.get(index);
 	}
 }
 
