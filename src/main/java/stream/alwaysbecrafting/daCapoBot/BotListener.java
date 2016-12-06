@@ -1,28 +1,20 @@
 package stream.alwaysbecrafting.daCapoBot;
 
-
-import java.io.File;
+import org.pircbotx.hooks.ListenerAdapter;
+import org.pircbotx.hooks.types.GenericMessageEvent;
 
 //==============================================================================
-public class Track {
-	//--------------------------------------------------------------------------
-	public File file;
-
+public class BotListener extends ListenerAdapter{
 	//--------------------------------------------------------------------------
 
-	Track(File track){
-	this.file = track;
-	}
-
-	//--------------------------------------------------------------------------
 
 	@Override
-	public String toString(){
-		return file.getName();
-
+	public void onGenericMessage(GenericMessageEvent event) {
+		//When someone says ?helloworld respond with "Hello World"
+		if (event.getMessage().startsWith("?helloworld"))
+			event.respond("Hello world!");
 	}
 
 	//--------------------------------------------------------------------------
 }
-
 //------------------------------------------------------------------------------

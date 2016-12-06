@@ -11,10 +11,6 @@ public class Playlist {
 	//--------------------------------------------------------------------------
 
 //todo ability to request songs
-
-	//todo 	public readable map? no just an array, output array tracks with position + 1,
-//todo 	call section with position - 1
-//todo  get position of tracks, output position + 1 and filename
 //todo  play tracks from position
 //todo 	eventually set it to use a sqllite db for upvote/downvote, skip count ...
 	private File dir;
@@ -30,19 +26,22 @@ public class Playlist {
 				);
 	}
 
+	//--------------------------------------------------------------------------
+
 	public void shuffle() {
 		Collections.shuffle(tracks);
 
 	}
 
-	public void sort() {
+	//--------------------------------------------------------------------------
 
-
-	}
+	public void sort() {	}
 
 	public Track getTrack(int index){
 		return tracks.get(index);
 	}
+
+	//--------------------------------------------------------------------------
 
 	public Track nextInList(Track currentTrack){
 		return tracks.get( (tracks.indexOf( currentTrack ) + 1) % tracks.size() );
