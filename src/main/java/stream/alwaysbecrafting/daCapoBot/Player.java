@@ -56,7 +56,8 @@ public class Player extends PlaybackListener{
 	//--------------------------------------------------------------------------
 
 	public void nextTrack() {
-
+		currentTrack = currentPlaylist.nextInList( currentTrack );
+		play();
 	}
 
 
