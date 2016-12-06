@@ -12,13 +12,16 @@ public class Player extends PlaybackListener{
 	//--------------------------------------------------------------------------
 	private AdvancedPlayer player;
 	private Thread playerThread;
-
+	private boolean playerRunning = false;
 
 	public void play(Track track) {
 		try {
+			if( playerRunning ){
+				player.close();
+			}
 			player = new AdvancedPlayer(
-					new FileInputStream( track.file ),
-					systemRegistry().createAudioDevice() );
+					new FileInputStream( track.file ), systemRegistry().createAudioDevice() );
+
 			playerThread = new Thread(
 					() -> {
 							try {
@@ -30,7 +33,7 @@ public class Player extends PlaybackListener{
 					,"AudioPlayerThread" );
 
 			playerThread.start();
-
+			playerRunning = true;
 		} catch ( Exception ex ) {
 			ex.printStackTrace();
 		}
