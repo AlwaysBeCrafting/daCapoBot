@@ -25,12 +25,9 @@ public class Playlist {
 
 		tracks =  Arrays.stream(dir.listFiles())
 				.filter( track -> track.getName().endsWith( ".mp3" ) )
-				.map( (f) -> new Track(f) )
+				.map( Track::new )
 				.collect( Collectors.toList()
 				);
-
-
-		sort();
 
 		tracks.stream()
 				.forEach( track -> System.out.format("%s\n", track ) );
@@ -42,7 +39,7 @@ public class Playlist {
 	}
 
 	public void sort() {
-		//tracks.sort( File::compareTo );
+		//tracks.sort( Track::compareTo );
 
 	}
 }
