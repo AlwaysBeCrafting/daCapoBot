@@ -36,6 +36,8 @@ public class Player extends PlaybackListener{
 			playerThread = new Thread(
 					() -> {
 							try {
+
+								System.out.println(currentTrack.toString());
 								this.player.play();
 								nextTrack();
 							} catch ( JavaLayerException ex ) {
@@ -59,7 +61,6 @@ public class Player extends PlaybackListener{
 		currentTrack = currentPlaylist.nextInList( currentTrack );
 		play();
 	}
-
 
 	//--------------------------------------------------------------------------
 }

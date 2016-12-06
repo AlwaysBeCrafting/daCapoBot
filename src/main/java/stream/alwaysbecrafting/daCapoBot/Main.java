@@ -12,15 +12,6 @@ public class Main {
 		p1.setPlaylist( sideA );
 		p1.play();
 
-		try{
-			Thread.sleep( 10000 );
-		}
-		catch(Exception e){
-
-		}
-		sideA.shuffle();
-		p1.nextTrack();
-
 	}
 	//--------------------------------------------------------------------------
 }

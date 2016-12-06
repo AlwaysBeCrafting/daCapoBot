@@ -28,10 +28,6 @@ public class Playlist {
 				.map( Track::new )
 				.collect( Collectors.toList()
 				);
-
-		tracks.stream()
-				.forEach( track -> System.out.format("%s\n", track ) );
-
 	}
 
 	public void shuffle() {
