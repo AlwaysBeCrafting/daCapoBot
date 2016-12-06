@@ -2,7 +2,9 @@ package stream.alwaysbecrafting.daCapoBot;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 //==============================================================================
 public class Playlist {
@@ -16,34 +18,31 @@ public class Playlist {
 //todo  play tracks from position
 //todo 	eventually set it to use a sqllite db for upvote/downvote, skip count ...
 	private File dir;
-	private boolean shuffle = false;
-	private List<File> tracks;
-
-	public void setShuffle( boolean shuffle ) {
-		this.shuffle = shuffle;
-	}
-
+	private List<Track> tracks;
 
 	public Playlist( String path ) {
 		dir = new File( path );
 
-		tracks = Arrays.asList( dir.listFiles() );
-		System.out.println( tracks.toString() );
+		tracks =  Arrays.stream(dir.listFiles())
+				.filter( track -> track.getName().endsWith( ".mp3" ) )
+				.map( (f) -> new Track(f) )
+				.collect( Collectors.toList()
+				);
+
 
 		sort();
 
-		for ( int i = 0; i < tracks.size(); i++ ) {  //print current tracks
-			System.out.format( "%d %s\n", i + 1, tracks.get( i ) );
-		}
+		tracks.stream()
+				.forEach( track -> System.out.format("%s\n", track ) );
 
 	}
 
 	public void shuffle() {
-		//shuffle playlist
+		Collections.shuffle(tracks);
 	}
 
 	public void sort() {
-		tracks.sort( File::compareTo );
+		//tracks.sort( File::compareTo );
 
 	}
 }

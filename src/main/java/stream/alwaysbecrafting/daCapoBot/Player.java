@@ -8,18 +8,14 @@ import static javazoom.jl.player.FactoryRegistry.systemRegistry;
 //==============================================================================
 public class Player extends PlaybackListener implements Runnable{
 	//--------------------------------------------------------------------------
-	private String filePath;
 	private AdvancedPlayer player;
 	private Thread playerThread;
 
-	public Player( String filePath ){
-		this.filePath = filePath;
-	}
 
-	public void play() {
+	public void play(Track track) {
 		try {
 			player = new AdvancedPlayer(
-					new java.net.URL( filePath ).openStream(),
+					new java.net.URL(track.file.toString()).openStream(),
 					systemRegistry().createAudioDevice() );
 			playerThread = new Thread( this, "AudioPlayerThread" );
 			playerThread.start();
