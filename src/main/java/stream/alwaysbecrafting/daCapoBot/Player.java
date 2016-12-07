@@ -34,7 +34,7 @@ public class Player {
 			JFXPanel jfxPanel = new JFXPanel();
 		}
 		player = new MediaPlayer( new Media( currentTrack.toURIString() ) );
-		System.out.println( currentTrack.toString() );
+		System.out.println( "Now Playing: " + currentTrack.toString() );
 
 		try {
 			PrintWriter writer = new PrintWriter( "/home/mh/Current_Track", "UTF-8" );
