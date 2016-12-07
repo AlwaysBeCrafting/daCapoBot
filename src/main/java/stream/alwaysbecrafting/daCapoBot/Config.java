@@ -5,7 +5,6 @@ import org.pircbotx.Configuration;
 //==============================================================================
 public class Config {
 	public Configuration botConfiguration;
-	public Playlist sideA;
 	//--------------------------------------------------------------------------
 
 	public Configuration getBotConfig(){
@@ -24,8 +23,7 @@ public class Config {
 	//--------------------------------------------------------------------------
 
 	public Playlist getPlaylist(){
-		this.sideA = new Playlist( "/home/mh/Music/OC ReMix - 1 to 3000 [v20141015]" );
-		return this.sideA;
+		return new Playlist( "/home/mh/Music/OC ReMix - 1 to 3000 [v20141015]" );
 	}
 }
 //------------------------------------------------------------------------------

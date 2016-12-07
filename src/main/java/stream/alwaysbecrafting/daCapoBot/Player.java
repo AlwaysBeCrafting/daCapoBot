@@ -70,7 +70,6 @@ public class Player extends PlaybackListener{
 		currentTrack = currentPlaylist.nextInList( currentTrack );
 		play();
 	}
-
 	//--------------------------------------------------------------------------
 }
 //------------------------------------------------------------------------------

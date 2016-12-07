@@ -7,19 +7,23 @@ import org.pircbotx.hooks.types.GenericMessageEvent;
 //==============================================================================
 public class BotListener extends ListenerAdapter{
 	//--------------------------------------------------------------------------
-
+	Player p1;
+	Playlist sideA;
 
 	@Override
 	public void onGenericMessage(GenericMessageEvent event) {
 		//When someone says ?helloworld respond with "Hello World"
-		if (event.getMessage().startsWith("?helloworld"))
-			event.respond("Hello world!");
+		if (event.getMessage().startsWith( "!next" ))
+			p1.nextTrack();
+
 	}
-	
+
+
 	@Override
 	public void onConnect( ConnectEvent event ){
-		Player p1 = new Player();
-		p1.setPlaylist( new Config().getPlaylist() );
+		this.p1 = new Player();
+		sideA = new Config().getPlaylist();
+		p1.setPlaylist( sideA );
 		p1.play();
 	}
 
