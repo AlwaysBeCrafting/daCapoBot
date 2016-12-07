@@ -15,6 +15,8 @@ public class BotListener extends ListenerAdapter{
 		//When someone says ?helloworld respond with "Hello World"
 		if (event.getMessage().startsWith( "!next" ))
 			p1.nextTrack();
+		if (event.getMessage().startsWith( "!test" ))
+			event.respondWith( "this was a test" );
 
 	}
 

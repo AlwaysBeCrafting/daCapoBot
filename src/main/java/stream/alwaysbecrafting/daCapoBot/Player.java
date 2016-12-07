@@ -1,19 +1,17 @@
 package stream.alwaysbecrafting.daCapoBot;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-import javazoom.jl.decoder.JavaLayerException;
-import javazoom.jl.player.advanced.AdvancedPlayer;
-import javazoom.jl.player.advanced.PlaybackListener;
-
-import static javazoom.jl.player.FactoryRegistry.systemRegistry;
+import javafx.embed.swing.JFXPanel;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 
 //==============================================================================
-public class Player extends PlaybackListener{
+public class Player{
 	//--------------------------------------------------------------------------
-	private AdvancedPlayer player;
+	//private AdvancedPlayer player;
+	private MediaPlayer player;
 	private Thread playerThread;
 	private boolean playerRunning = false;
 	private Track currentTrack;
@@ -27,13 +25,17 @@ public class Player extends PlaybackListener{
 
 	//--------------------------------------------------------------------------
 
+
 	public void play() {
 		try {
 			if( playerRunning ){
-				player.close();
+				player.stop();
 			}
-			player = new AdvancedPlayer(
-					new FileInputStream( currentTrack.file ), systemRegistry().createAudioDevice() );
+			if( !playerRunning ){
+				JFXPanel jfxPanel = new JFXPanel();
+			}
+
+			player = new MediaPlayer( new Media( currentTrack.toURIString()));
 
 			playerThread = new Thread(
 					() -> {
@@ -44,11 +46,12 @@ public class Player extends PlaybackListener{
 								PrintWriter writer = new PrintWriter( "/home/mh/Current_Track", "UTF-8" );
 								writer.println( currentTrack.toString() );
 								writer.close();
-
 								this.player.play();
-								nextTrack();
-							} catch ( JavaLayerException ex ) {
-								ex.printStackTrace();
+								player.setOnEndOfMedia( new Runnable() {
+									@Override public void run() {
+										nextTrack();
+									}
+								} );
 							} catch ( IOException e){
 								e.printStackTrace();
 							}
@@ -71,5 +74,6 @@ public class Player extends PlaybackListener{
 		play();
 	}
 	//--------------------------------------------------------------------------
+
 }
 //------------------------------------------------------------------------------

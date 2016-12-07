@@ -16,6 +16,12 @@ public class Track {
 
 	//--------------------------------------------------------------------------
 
+	public String toURIString(){
+		return this.file.toURI().toString();
+	}
+
+	//--------------------------------------------------------------------------
+
 	@Override
 	public String toString(){
 		return file.getName();
