@@ -8,6 +8,7 @@ public class Main{
 	//--------------------------------------------------------------------------
 
 	public static void main( String[] args ) {
+
 		Config botconfig = new Config();
 
 		//Create our bot with the botConfiguration
