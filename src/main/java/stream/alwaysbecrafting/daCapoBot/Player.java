@@ -49,11 +49,7 @@ public class Player {
 		}
 
 		this.player.play();
-		player.setOnEndOfMedia( new Runnable() {
-			@Override public void run() {
-				nextTrack();
-			}
-		} );
+		player.setOnEndOfMedia(this::nextTrack);
 		playerRunning = true;
 }
 
