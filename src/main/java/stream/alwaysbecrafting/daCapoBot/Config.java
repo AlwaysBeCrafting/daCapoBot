@@ -11,9 +11,9 @@ public class Config {
 		if(botConfiguration == null) {
 			//Configure what we want our bot to do
 			this.botConfiguration = new Configuration.Builder()
-					.setName( "daCapoBot" ) //Set the nick of the bot. CHANGE IN YOUR CODE
-					.addServer( "127.0.0.1" ) //Join the freenode network
-					.addAutoJoinChannel( "#test" ) //Join the official #pircbotx channel
+					.setName( "daCapoBot" ) //Set the nick of the bot.
+					.addServer( "192.168.1.42" ) //Join the network
+					.addAutoJoinChannel( "#test" )
 					.addListener( new BotListener() ) //Add our listener that will be called on Events
 					.buildConfiguration();
 		}

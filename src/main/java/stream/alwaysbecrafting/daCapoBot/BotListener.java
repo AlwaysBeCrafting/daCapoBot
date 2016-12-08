@@ -23,10 +23,13 @@ public class BotListener extends ListenerAdapter{
 
 	@Override
 	public void onConnect( ConnectEvent event ){
-		this.p1 = new Player();
-		sideA = new Config().getPlaylist();
-		p1.setPlaylist( sideA );
-		p1.play();
+		try {
+			this.p1 = new Player();
+			sideA = new Config().getPlaylist();
+			p1.setPlaylist( sideA );
+			p1.play();
+		}
+		catch(Exception e){e.printStackTrace();}
 	}
 
 	//--------------------------------------------------------------------------

@@ -17,6 +17,10 @@ public class Track {
 	//--------------------------------------------------------------------------
 
 	public String toURIString(){
+		if(!this.file.exists()){
+			System.out.println("Error: File does not Exist: " + this.file.toString());
+			throw new RuntimeException(	);
+		}
 		return this.file.toURI().toString();
 	}
 
