@@ -11,7 +11,6 @@ import javafx.scene.media.MediaPlayer;
 //==============================================================================
 public class Player {
 	//--------------------------------------------------------------------------
-	//private AdvancedPlayer player;
 	private MediaPlayer player;
 	private boolean playerRunning = false;
 	private Track currentTrack;
@@ -21,21 +20,31 @@ public class Player {
 	public void setPlaylist( Playlist currentPlaylist ) {
 		this.currentPlaylist = currentPlaylist;
 		currentTrack = currentPlaylist.getTrack( 0 );
+		initializePlayer();
+
 	}
+
 
 	//--------------------------------------------------------------------------
 
-
-	public void play() {
+	public void initializePlayer(){
 		if ( playerRunning ) {
 			player.stop();
 		}
 		if ( !playerRunning ) {
 			JFXPanel jfxPanel = new JFXPanel();
 		}
-		player = new MediaPlayer( new Media( currentTrack.toURIString() ) );
-		System.out.println( "Now Playing: " + currentTrack.toString() );
 
+		player = new MediaPlayer( new Media( currentTrack.toURIString() ) );
+		playerRunning = true;
+
+		currentTrack.getTrackData();
+	}
+
+	public void play() {
+		initializePlayer();
+
+		System.out.println( "Now Playing: " + currentTrack.toString() );
 		try {
 			PrintWriter writer = new PrintWriter( "/home/mh/Current_Track", "UTF-8" );
 			writer.println( currentTrack.toString() );
@@ -50,7 +59,6 @@ public class Player {
 
 		this.player.play();
 		player.setOnEndOfMedia(this::nextTrack);
-		playerRunning = true;
 }
 
 	//--------------------------------------------------------------------------

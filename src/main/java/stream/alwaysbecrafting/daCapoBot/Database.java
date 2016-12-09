@@ -40,13 +40,20 @@ public class Database {
 	//--------------------------------------------------------------------------
 
 	private void connect() {
+		if( connection != null){
+			try{
+				connection.close();
+			}catch(SQLException e){
+				System.out.println(e.getMessage());
+			}
+		}
+
 		connection = null;
 		boolean tableExists = false;
 
 		try {
 			// db parameters
 			String url = "jdbc:sqlite:" + getDBPath();
-			System.out.println("test1");
 			// create a connection to the database
 			connection = DriverManager.getConnection( url );
 			System.out.println( "Connection to SQLite has been established." );
@@ -65,7 +72,7 @@ public class Database {
 				}
 			}
 			if(!tableExists){
-				System.out.println("Tracks does not exist, creating...");
+				System.out.println("Table 'Tracks' does not exist, creating...");
 				createTable();
 			}
 
@@ -81,11 +88,11 @@ public class Database {
 
 		String sql = "CREATE TABLE IF NOT EXISTS Tracks (\n"
 				+ "	id integer PRIMARY KEY,\n"
-				+ "	Title text NOT NULL,\n"
+				+ "	Title text COLLATE NOCASE,\n"
 				+ " Path text NOT NULL,\n"
-				+ " Artist text NOT NULL,\n"
-				+ " Album text NOT NULL,\n"
-				+ " Rating DECIMAL(3,2) NOT NULL\n"
+				+ " Artist text COLLATE NOCASE,\n"
+				+ " Album text COLLATE NOCASE,\n"
+				+ " Rating DECIMAL(3,2)\n"
 				+ ");";
 
 		try{
@@ -99,6 +106,10 @@ public class Database {
 	}
 	//--------------------------------------------------------------------------
 
+	public void insertToTracks(){
+		connect();
+
+	}
 
 }
 //------------------------------------------------------------------------------
