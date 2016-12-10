@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 //==============================================================================
 public class Playlist {
@@ -24,10 +25,16 @@ public class Playlist {
 				.map( Track::new )
 				.collect( Collectors.toList()
 				);
+
 	}
 
 	//--------------------------------------------------------------------------
 
+	public List<Track> getTrackList(){
+		return this.tracks;
+	}
+
+	//--------------------------------------------------------------------------
 	public void shuffle() {
 		Collections.shuffle(tracks);
 
@@ -46,6 +53,21 @@ public class Playlist {
 	public Track nextInList(Track currentTrack){
 		return tracks.get( (tracks.indexOf( currentTrack ) + 1) % tracks.size() );
 	}
+
+	//--------------------------------------------------------------------------
+
+	public Stream<Track> stream(){
+		return tracks.stream();
+	}
+
+	//--------------------------------------------------------------------------
+
+	public Stream<Track> parallelStream(){
+		return tracks.parallelStream();
+	}
+
+	//--------------------------------------------------------------------------
+
 }
 
 //------------------------------------------------------------------------------

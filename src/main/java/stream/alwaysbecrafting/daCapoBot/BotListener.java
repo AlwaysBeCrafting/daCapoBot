@@ -9,6 +9,7 @@ public class BotListener extends ListenerAdapter{
 	//--------------------------------------------------------------------------
 	Player p1;
 	Playlist sideA;
+	Database db;
 
 	@Override
 	public void onGenericMessage(GenericMessageEvent event) {
@@ -27,7 +28,12 @@ public class BotListener extends ListenerAdapter{
 			this.p1 = new Player();
 			sideA = new Config().getPlaylist();
 			p1.setPlaylist( sideA );
+
+			db = new Database();
+			db.insertToTracks(sideA);
+
 			p1.play();
+
 		}
 		catch(Exception e){e.printStackTrace();}
 	}

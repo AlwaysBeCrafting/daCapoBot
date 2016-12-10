@@ -15,7 +15,7 @@ public class Database {
 	private Connection connection;
 	private ResultSet tables;
 
-	public void test() {
+	Database() {
 		connect();
 		try {
 			connection.close();
@@ -106,8 +106,12 @@ public class Database {
 	}
 	//--------------------------------------------------------------------------
 
-	public void insertToTracks(){
+	public void insertToTracks(Playlist playlist){
 		connect();
+		playlist.parallelStream().forEach( track -> {
+			track.fetchTrackData();
+			System.out.println( track.title );
+		} );
 
 	}
 

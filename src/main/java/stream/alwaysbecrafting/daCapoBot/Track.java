@@ -12,6 +12,7 @@ public class Track {
 	public File file;
 	public String title;
 	public String artist;
+	public String album;
 
 	//--------------------------------------------------------------------------
 
@@ -39,7 +40,7 @@ public class Track {
 
 	//--------------------------------------------------------------------------
 
-	public void getTrackData(){
+	public boolean fetchTrackData(){
 		try {
 			Mp3File mp3file = new Mp3File( this.file );
 
@@ -51,12 +52,16 @@ public class Track {
 				id3v1 = mp3file.getId3v2Tag();
 			}
 			if(id3v1 != null) {
-				System.out.println( "Title: " + id3v1.getTitle() );
+				this.title  = id3v1.getTitle();
+				this.artist = id3v1.getArtist();
+				this.album  = id3v1.getAlbum();
+				return true;
 			}
 		}
 		catch ( Exception e ){
 			e.printStackTrace();
 		}
+		return false;
 	}
 
 }

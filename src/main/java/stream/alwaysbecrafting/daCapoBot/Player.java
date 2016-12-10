@@ -38,11 +38,16 @@ public class Player {
 		player = new MediaPlayer( new Media( currentTrack.toURIString() ) );
 		playerRunning = true;
 
-		currentTrack.getTrackData();
 	}
 
 	public void play() {
 		initializePlayer();
+
+		if(currentTrack.fetchTrackData()){
+			System.out.println("Title: " + currentTrack.title);
+			System.out.println("Album: " + currentTrack.album);
+			System.out.println("Artist: "+ currentTrack.artist);
+		}
 
 		System.out.println( "Now Playing: " + currentTrack.toString() );
 		try {
