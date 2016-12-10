@@ -45,14 +45,12 @@ public class Player {
 
 		if(currentTrack.fetchTrackData()){
 			System.out.println("Title: " + currentTrack.title);
-			System.out.println("Album: " + currentTrack.album);
-			System.out.println("Artist: "+ currentTrack.artist);
 		}
 
-		System.out.println( "Now Playing: " + currentTrack.toString() );
+		System.out.println( "Now Playing: " + currentTrack.title );
 		try {
 			PrintWriter writer = new PrintWriter( "/home/mh/Current_Track", "UTF-8" );
-			writer.println( currentTrack.toString() );
+			writer.println( currentTrack.title );
 			writer.close();
 		}
 		catch (FileNotFoundException e){

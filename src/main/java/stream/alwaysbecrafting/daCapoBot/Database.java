@@ -9,6 +9,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 //==============================================================================
 public class Database {
@@ -64,7 +67,7 @@ public class Database {
 			tables = md.getTables( null, null, "%", null);
 			while(tables.next()){
 				if(tables.getString(3).equals("Tracks")){
-					System.out.println("Tracks Exists");
+					System.out.println("Table Exists");
 					tableExists = true;
 				}
 				else{
@@ -109,13 +112,36 @@ public class Database {
 
 	public void insertToTracks(Playlist playlist){
 		connect();
-		playlist.parallelStream().forEach( track -> {
-			track.fetchTrackData();
-			System.out.println( track.title );
-		} );
+
+		List<String> pathsFromDB = new ArrayList<>();
+
 		String sql = "INSERT INTO Tracks(Title,Path,Artist,Album,Rating) VALUES(?,?,?,?,50)";
 
-		playlist.parallelStream().forEach( track -> {
+		try{
+			 String select = "SELECT Path FROM Tracks";
+		     Statement stmt  = connection.createStatement();
+		     ResultSet rs    = stmt.executeQuery(select);
+
+				// loop through the result set
+				while ( rs.next() ) {
+					pathsFromDB.add( rs.getString( "Path" ) );
+				}
+			}
+			catch(Exception e){
+				e.printStackTrace();
+			}
+
+		List<Track> tracksToInsert = playlist
+				.stream()
+				.filter( track -> !pathsFromDB.contains( track.getCanonicalPath() ) )
+				.collect( Collectors.toList() );
+
+		try {
+			connection.setAutoCommit( false );
+		} catch ( SQLException e ) {
+			e.printStackTrace();
+		}
+		tracksToInsert.forEach( track -> {
 			try {
 				PreparedStatement statement = connection.prepareStatement( sql );
 				statement.setString( 1, track.title );
@@ -123,14 +149,22 @@ public class Database {
 				statement.setString( 3, track.artist );
 				statement.setString( 4, track.album );
 				statement.executeUpdate();
-				System.out.println("Added: '" + track.title + "' to Tracks table.");
-			}
-			catch ( Exception e ){
+			} catch ( Exception e ) {
 				e.printStackTrace();
 			}
 		} );
 
+		try {
+			connection.commit();
+			System.out.println("Added " + tracksToInsert.size() + " tracks to the database.");
+		}
+		catch ( SQLException e ){
+			e.printStackTrace();
+		}
 	}
+
+	//--------------------------------------------------------------------------
+
 
 }
 //------------------------------------------------------------------------------

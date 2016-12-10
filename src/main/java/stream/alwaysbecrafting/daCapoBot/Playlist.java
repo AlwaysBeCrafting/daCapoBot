@@ -18,14 +18,28 @@ public class Playlist {
 	private List<Track> tracks;
 
 	public Playlist( String path ) {
+		try{
 		dir = new File( path );
 
-		tracks =  Arrays.stream(dir.listFiles())
-				.filter( track -> track.getName().endsWith( ".mp3" ) )
-				.map( Track::new )
-				.collect( Collectors.toList()
-				);
+			tracks = Arrays.stream( dir.listFiles() )
+					.filter( track -> track.getName().endsWith( ".mp3" ) )
+					.map( Track::new )
+					.collect( Collectors.toList()
+					);
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
 
+	}
+
+	//--------------------------------------------------------------------------
+
+	public void populatePlaylistMetadata(){
+		System.out.println("Now loading Playlist Metadata...");
+		parallelStream()
+				.forEach( Track::fetchTrackData );
+		System.out.println("Metadata loading complete!");
 	}
 
 	//--------------------------------------------------------------------------
@@ -42,7 +56,18 @@ public class Playlist {
 
 	//--------------------------------------------------------------------------
 
-	public void sort() {	}
+	public void sort() {
+		tracks = tracks
+				.parallelStream()
+				.sorted( (t1, t2) -> t1.title.compareToIgnoreCase( t2.title ) )
+				.collect( Collectors.toList());
+		for ( Track item:tracks
+		       ) {
+			System.out.println("Sorted: " + item.title);
+
+		}
+
+	}
 
 	public Track getTrack(int index){
 		return tracks.get(index);
@@ -68,6 +93,9 @@ public class Playlist {
 
 	//--------------------------------------------------------------------------
 
+	public int size(){
+		return tracks.size();
+	}
 }
 
 //------------------------------------------------------------------------------

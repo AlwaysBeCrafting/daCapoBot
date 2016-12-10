@@ -23,7 +23,7 @@ public class Config {
 	//--------------------------------------------------------------------------
 
 	public Playlist getPlaylist(){
-		return new Playlist( "/home/mh/Music/OC ReMix - 1 to 3000 [v20141015]" );
+		return new Playlist( "/home/mh/Music/Bound Together" );
 	}
 }
 //------------------------------------------------------------------------------

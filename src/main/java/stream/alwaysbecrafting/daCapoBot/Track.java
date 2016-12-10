@@ -5,6 +5,7 @@ import com.mpatric.mp3agic.ID3v1;
 import com.mpatric.mp3agic.Mp3File;
 
 import java.io.File;
+import java.io.IOException;
 
 //==============================================================================
 public class Track {
@@ -28,6 +29,18 @@ public class Track {
 			throw new RuntimeException(	);
 		}
 		return this.file.toURI().toString();
+
+	}
+
+	//--------------------------------------------------------------------------
+
+	public String getCanonicalPath(){
+		try {
+			return this.file.getCanonicalPath();
+		} catch ( IOException e ) {
+			e.printStackTrace();
+		}
+			return "";
 	}
 
 	//--------------------------------------------------------------------------

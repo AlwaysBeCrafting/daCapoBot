@@ -21,18 +21,18 @@ public class BotListener extends ListenerAdapter{
 
 	}
 
-
 	@Override
 	public void onConnect( ConnectEvent event ){
 		try {
 			this.p1 = new Player();
 			sideA = new Config().getPlaylist();
 			p1.setPlaylist( sideA );
+			p1.play();
+
+			sideA.populatePlaylistMetadata();
 
 			db = new Database();
 			db.insertToTracks(sideA);
-
-			p1.play();
 
 		}
 		catch(Exception e){e.printStackTrace();}
