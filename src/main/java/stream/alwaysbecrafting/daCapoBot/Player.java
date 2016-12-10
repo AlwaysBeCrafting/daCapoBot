@@ -67,8 +67,15 @@ public class Player {
 	//--------------------------------------------------------------------------
 
 	public void nextTrack() {
+		currentTrack.downvote();
 		currentTrack = currentPlaylist.nextInList( currentTrack );
 		play();
+	}
+
+	public void request( String s ) {
+		currentTrack.upvote();
+		System.out.println(s);
+
 	}
 	//--------------------------------------------------------------------------
 

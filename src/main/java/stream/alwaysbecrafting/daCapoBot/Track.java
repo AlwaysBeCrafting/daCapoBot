@@ -77,6 +77,9 @@ public class Track {
 		return false;
 	}
 
+	public void downvote() {}
+
+	public void upvote() {}
 }
 
 //------------------------------------------------------------------------------

@@ -13,11 +13,13 @@ public class BotListener extends ListenerAdapter{
 
 	@Override
 	public void onGenericMessage(GenericMessageEvent event) {
-		//When someone says ?helloworld respond with "Hello World"
-		if (event.getMessage().startsWith( "!next" ))
+		db.logChat(event.getUser().getRealName(), event.getMessage());
+		if (event.getMessage().startsWith( "!veto" ))
 			p1.nextTrack();
+		if (event.getMessage().toLowerCase().startsWith( "!request" ))
+			p1.request(event.getMessage().toLowerCase().toLowerCase());
 		if (event.getMessage().startsWith( "!test" ))
-			event.respondWith( "this was a test" );
+			event.respondWith( "Slippy's not such a screw up after all" );
 
 	}
 

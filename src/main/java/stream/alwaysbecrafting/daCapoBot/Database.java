@@ -53,7 +53,8 @@ public class Database {
 		}
 
 		connection = null;
-		boolean tableExists = false;
+		boolean tableTracksExists = false;
+		boolean tableChatLogExists = false;
 
 		try {
 			// db parameters
@@ -66,29 +67,61 @@ public class Database {
 			DatabaseMetaData md = connection.getMetaData();
 			tables = md.getTables( null, null, "%", null);
 			while(tables.next()){
-				if(tables.getString(3).equals("Tracks")){
-					System.out.println("Table Exists");
-					tableExists = true;
+				if(tables.getString(3).equals("Tracks") || tableTracksExists == true){
+					tableTracksExists = true;
 				}
 				else{
-
-					tableExists = false;
+					tableTracksExists = false;
+				}
+				if(tables.getString(3).equals("ChatLog") || tableChatLogExists == true){
+					tableChatLogExists = true;
+				}
+				else{
+					tableChatLogExists = false;
 				}
 			}
-			if(!tableExists){
+			if(!tableTracksExists){
 				System.out.println("Table 'Tracks' does not exist, creating...");
-				createTable();
+				createTableTracks();
 			}
-
+			else{
+					System.out.println("Table Tracks Exists");
+			}
+			if(!tableChatLogExists){
+				System.out.println("Table 'ChatLog' does not exist, creating...");
+				createTableChatLog();
+			}
+			else{
+					System.out.println("Table ChatLog Exists");
+			}
 		}
 		catch (SQLException e) {
 			System.out.println(e.getMessage());
 		}
 	}
 
+	private void createTableChatLog() {
+
+		String sql = "CREATE TABLE IF NOT EXISTS ChatLog (\n"
+				+ "	id integer PRIMARY KEY,\n"
+				+ "	Timestamp long NOT NULL,\n"
+				+ " User text COLLATE NOCASE,\n"
+				+ " Message text COLLATE NOCASE\n"
+				+ ");";
+
+		try{
+			Statement stmt = connection.createStatement();
+			// create a new table
+			stmt.execute(sql);
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+		}
+
+	}
+
 	//--------------------------------------------------------------------------
 
-	private void createTable(){
+	private void createTableTracks(){
 
 		String sql = "CREATE TABLE IF NOT EXISTS Tracks (\n"
 				+ "	id integer PRIMARY KEY,\n"
@@ -157,13 +190,36 @@ public class Database {
 		try {
 			connection.commit();
 			System.out.println("Added " + tracksToInsert.size() + " tracks to the database.");
+			connection.close();
 		}
 		catch ( SQLException e ){
 			e.printStackTrace();
 		}
 	}
 
+	public void logChat( String user, String message ) {
+		connect();
+		String sql = "INSERT INTO ChatLog(Timestamp,User,Message) VALUES(?,?,?)";
+
+		try {
+			PreparedStatement statement = connection.prepareStatement( sql );
+			statement.setLong( 1, System.currentTimeMillis() );
+			statement.setString( 2, user.toString() );
+			statement.setString( 3, message );
+			statement.executeUpdate();
+		} catch ( SQLException e ) {
+			e.printStackTrace();
+		}
+
+		try {
+			connection.close();
+		} catch ( SQLException e ) {
+			e.printStackTrace();
+		}
+	}
+
 	//--------------------------------------------------------------------------
+
 
 
 }
