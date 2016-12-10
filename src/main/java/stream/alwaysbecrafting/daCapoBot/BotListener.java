@@ -2,7 +2,7 @@ package stream.alwaysbecrafting.daCapoBot;
 
 import org.pircbotx.hooks.ListenerAdapter;
 import org.pircbotx.hooks.events.ConnectEvent;
-import org.pircbotx.hooks.types.GenericMessageEvent;
+import org.pircbotx.hooks.events.MessageEvent;
 
 //==============================================================================
 public class BotListener extends ListenerAdapter{
@@ -12,8 +12,10 @@ public class BotListener extends ListenerAdapter{
 	Database db;
 
 	@Override
-	public void onGenericMessage(GenericMessageEvent event) {
-		db.logChat(event.getUser().getRealName(), event.getMessage());
+	public void onMessage(MessageEvent event) throws Exception{
+		if(event.getUser().getRealName() != null) {
+			db.logChat( event.getUser().getRealName(), event.getMessage() );
+		}
 		if (event.getMessage().startsWith( "!veto" ))
 			p1.nextTrack();
 		if (event.getMessage().toLowerCase().startsWith( "!request" ))
@@ -31,7 +33,6 @@ public class BotListener extends ListenerAdapter{
 			p1.setPlaylist( sideA );
 			p1.play();
 
-			sideA.populatePlaylistMetadata();
 
 			db = new Database();
 			db.insertToTracks(sideA);

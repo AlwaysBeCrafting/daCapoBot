@@ -35,15 +35,6 @@ public class Playlist {
 
 	//--------------------------------------------------------------------------
 
-	public void populatePlaylistMetadata(){
-		System.out.println("Now loading Playlist Metadata...");
-		parallelStream()
-				.forEach( Track::fetchTrackData );
-		System.out.println("Metadata loading complete!");
-	}
-
-	//--------------------------------------------------------------------------
-
 	public List<Track> getTrackList(){
 		return this.tracks;
 	}

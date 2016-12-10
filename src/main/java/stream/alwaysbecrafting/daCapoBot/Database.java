@@ -169,6 +169,8 @@ public class Database {
 				.filter( track -> !pathsFromDB.contains( track.getCanonicalPath() ) )
 				.collect( Collectors.toList() );
 
+		tracksToInsert.forEach( Track::fetchTrackData );
+
 		try {
 			connection.setAutoCommit( false );
 		} catch ( SQLException e ) {
