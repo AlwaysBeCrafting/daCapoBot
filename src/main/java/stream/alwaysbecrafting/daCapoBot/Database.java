@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -28,7 +29,7 @@ public class Database {
 
 	static String getDBPath(){
 		try{
-		File db = new File("db.db");
+		File db = new File("daCapoBot.db");
 			return db.getCanonicalPath();
 		}
 		catch ( IOException e ){
@@ -111,6 +112,22 @@ public class Database {
 		playlist.parallelStream().forEach( track -> {
 			track.fetchTrackData();
 			System.out.println( track.title );
+		} );
+		String sql = "INSERT INTO Tracks(Title,Path,Artist,Album,Rating) VALUES(?,?,?,?,50)";
+
+		playlist.parallelStream().forEach( track -> {
+			try {
+				PreparedStatement statement = connection.prepareStatement( sql );
+				statement.setString( 1, track.title );
+				statement.setString( 2, track.file.getCanonicalPath() );
+				statement.setString( 3, track.artist );
+				statement.setString( 4, track.album );
+				statement.executeUpdate();
+				System.out.println("Added: '" + track.title + "' to Tracks table.");
+			}
+			catch ( Exception e ){
+				e.printStackTrace();
+			}
 		} );
 
 	}
