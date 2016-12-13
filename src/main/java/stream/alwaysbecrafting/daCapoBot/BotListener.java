@@ -19,7 +19,7 @@ public class BotListener extends ListenerAdapter{
 		if (event.getMessage().toLowerCase().startsWith( "!help" ))
 			event.respondWith( "!help, !veto, !request, !whoami, !suggestions"  );
 		if (event.getMessage().toLowerCase().startsWith( "!veto" ))
-			p1.nextTrack();
+			p1.veto();
 		if (event.getMessage().toLowerCase().startsWith( "!request" ))
 			p1.request(event.getMessage().toLowerCase());
 		if (event.getMessage().toLowerCase().startsWith( "!whoami" ))
@@ -35,15 +35,11 @@ public class BotListener extends ListenerAdapter{
 	@Override
 	public void onConnect( ConnectEvent event ){
 		try {
-			this.p1 = new Player();
 			sideA = new Config().getPlaylist();
+			Database.DB_INSTANCE.insertToTracks(sideA);
+			this.p1 = new Player();
 			p1.setPlaylist( sideA );
 			p1.play();
-
-
-			db = new Database();
-			db.insertToTracks(sideA);
-
 		}
 		catch(Exception e){e.printStackTrace();}
 	}

@@ -16,16 +16,12 @@ import java.util.stream.Collectors;
 //==============================================================================
 public class Database {
 	//--------------------------------------------------------------------------
-	private Connection connection;
-	private ResultSet tables;
+	private static Connection connection;
+	public static final Database DB_INSTANCE = new Database();
 
-	Database() {
+
+	private Database() {
 		connect();
-		try {
-			connection.close();
-		} catch ( SQLException e ) {
-			e.printStackTrace();
-		}
 	}
 
 	//--------------------------------------------------------------------------
@@ -58,14 +54,14 @@ public class Database {
 
 		try {
 			// db parameters
-			String url = "jdbc:sqlite:" + getDBPath();
+			String url = "jdbc:sqlite:" + getDBPath() + "?journal_mode=WAL&synchronous=NORMAL&foreign_keys=ON";
 			// create a connection to the database
 			connection = DriverManager.getConnection( url );
 			System.out.println( "Connection to SQLite has been established." );
 
 			System.out.println( "Checking if table 'Tracks' exists...");
 			DatabaseMetaData md = connection.getMetaData();
-			tables = md.getTables( null, null, "%", null);
+			ResultSet tables = md.getTables( null, null, "%", null);
 			while(tables.next()){
 				if(tables.getString(3).equals("Tracks") || tableTracksExists == true){
 					tableTracksExists = true;
@@ -144,7 +140,6 @@ public class Database {
 	//--------------------------------------------------------------------------
 
 	public void insertToTracks(Playlist playlist){
-		connect();
 
 		List<String> pathsFromDB = new ArrayList<>();
 
@@ -192,7 +187,6 @@ public class Database {
 		try {
 			connection.commit();
 			System.out.println("Added " + tracksToInsert.size() + " tracks to the database.");
-			connection.close();
 		}
 		catch ( SQLException e ){
 			e.printStackTrace();
@@ -200,7 +194,6 @@ public class Database {
 	}
 
 	public void logChat( String user, String message ) {
-		connect();
 		String sql = "INSERT INTO ChatLog(Timestamp,User,Message) VALUES(?,?,?)";
 
 		try {
@@ -212,17 +205,57 @@ public class Database {
 		} catch ( SQLException e ) {
 			e.printStackTrace();
 		}
+	}
 
+	//--------------------------------------------------------------------------
+
+	public Track getFirstTrackFromDB(){
 		try {
-			connection.close();
-		} catch ( SQLException e ) {
+			String select = "SELECT Path FROM Tracks WHERE id = 1";
+
+			PreparedStatement statement = connection.prepareStatement( select );
+			ResultSet rs = statement.executeQuery();
+
+			return new Track( new File( rs.getString( "Path" ) ) );
+		}
+		catch(Exception e){
 			e.printStackTrace();
+			return null;
 		}
 	}
 
 	//--------------------------------------------------------------------------
 
+	public Track getNextTrackFromDB( Track currentTrack ) {
+		int trackID;
 
+		//get next track id from current track title
+		try {
+
+			String select = "SELECT id FROM Tracks WHERE Title = ? LIMIT 1";
+			PreparedStatement statement = connection.prepareStatement( select );
+			statement.setString( 1, currentTrack.title );
+
+			ResultSet rs = statement.executeQuery();
+			if ( rs.next() ) {
+				trackID = rs.getInt( "id" );
+
+				select = "SELECT Path FROM Tracks WHERE id > ? LIMIT 1";
+
+				statement = connection.prepareStatement( select );
+				statement.setInt( 1, trackID );
+				rs = statement.executeQuery();
+
+				return new Track( new File( rs.getString( "Path" ) ) );
+			} else {
+				return getFirstTrackFromDB();
+			}
+		}
+		catch(Exception e){
+			e.printStackTrace();
+			return null;
+		}
+	}
 
 }
 //------------------------------------------------------------------------------

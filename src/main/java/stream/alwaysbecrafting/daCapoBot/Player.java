@@ -19,7 +19,8 @@ public class Player {
 	//--------------------------------------------------------------------------
 	public void setPlaylist( Playlist currentPlaylist ) {
 		this.currentPlaylist = currentPlaylist;
-		currentTrack = currentPlaylist.getTrack( 0 );
+		this.currentPlaylist.clear();
+		currentTrack = Database.DB_INSTANCE.getFirstTrackFromDB();
 		initializePlayer();
 
 	}
@@ -44,10 +45,9 @@ public class Player {
 		initializePlayer();
 
 		if(currentTrack.fetchTrackData()){
-			System.out.println("Title: " + currentTrack.title);
+			System.out.println( "Now Playing: " + currentTrack.title );
 		}
 
-		System.out.println( "Now Playing: " + currentTrack.title );
 		try {
 			PrintWriter writer = new PrintWriter( "/home/mh/Current_Track", "UTF-8" );
 			writer.println( currentTrack.title );
@@ -67,6 +67,13 @@ public class Player {
 	//--------------------------------------------------------------------------
 
 	public void nextTrack() {
+		currentTrack = currentPlaylist.nextInList( currentTrack );
+		play();
+	}
+
+	//--------------------------------------------------------------------------
+
+	public void veto() {
 		currentTrack.downvote();
 		currentTrack = currentPlaylist.nextInList( currentTrack );
 		play();

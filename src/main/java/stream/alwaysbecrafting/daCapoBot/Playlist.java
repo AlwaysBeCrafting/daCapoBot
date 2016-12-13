@@ -66,8 +66,13 @@ public class Playlist {
 
 	//--------------------------------------------------------------------------
 
-	public Track nextInList(Track currentTrack){
-		return tracks.get( (tracks.indexOf( currentTrack ) + 1) % tracks.size() );
+	public Track nextInList(Track currentTrack) {
+
+			if(tracks.size() == 1){
+				tracks.add(Database.DB_INSTANCE.getNextTrackFromDB(tracks.get(0)));
+			}
+			tracks.remove( 0 );
+			return 	tracks.get( 0 );
 	}
 
 	//--------------------------------------------------------------------------
@@ -87,6 +92,11 @@ public class Playlist {
 	public int size(){
 		return tracks.size();
 	}
+
+	public void clear(){
+		this.tracks.clear();
+	}
+
 }
 
 //------------------------------------------------------------------------------

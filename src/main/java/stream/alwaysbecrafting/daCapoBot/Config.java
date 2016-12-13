@@ -12,7 +12,7 @@ public class Config {
 			//Configure what we want our bot to do
 			this.botConfiguration = new Configuration.Builder()
 					.setName( "daCapoBot" ) //Set the nick of the bot.
-					.addServer( "192.168.1.42" ) //Join the network
+					.addServer( "127.0.0.1" ) //Join the network
 					.addAutoJoinChannel( "#test" )
 					.addListener( new BotListener() ) //Add our listener that will be called on Events
 					.buildConfiguration();
