@@ -64,12 +64,11 @@ public class Playlist {
 
 	public Track nextInList(Track currentTrack) {
 
-			if(tracks.size() > 1) {
-				tracks.remove( 0 );
-			}
-			if(tracks.size() <= 1){
-				tracks.addAll(Database.DB_INSTANCE.getAfter(currentTrack,10));
-			}
+		tracks.remove( 0 );
+
+		if(tracks.isEmpty()){
+			tracks.addAll(Database.DB_INSTANCE.getAfter(currentTrack,10));
+		}
 		System.out.println(tracks.size());
 			return 	tracks.get( 0 );
 	}
@@ -96,6 +95,9 @@ public class Playlist {
 		this.tracks.clear();
 	}
 
+	public void add( Track first ) {
+		tracks.add( first );
+	}
 }
 
 //------------------------------------------------------------------------------

@@ -20,7 +20,9 @@ public class Player {
 	public void setPlaylist( Playlist currentPlaylist ) {
 		this.currentPlaylist = currentPlaylist;
 		this.currentPlaylist.clear();
-		currentTrack = Database.DB_INSTANCE.getFirst();
+		this.currentPlaylist.add(Database.DB_INSTANCE.getFirst());
+		this.currentTrack = this.currentPlaylist.getTrack( 0 );
+
 		initializePlayer();
 
 	}
