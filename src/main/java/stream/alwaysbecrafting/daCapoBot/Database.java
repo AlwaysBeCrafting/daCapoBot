@@ -211,7 +211,7 @@ public class Database {
 
 	public Track getFirstTrackFromDB(){
 		try {
-			String select = "SELECT Path FROM Tracks WHERE id = 1";
+			String select = "SELECT Path FROM Tracks WHERE id > 0 LIMIT 1";
 
 			PreparedStatement statement = connection.prepareStatement( select );
 			ResultSet rs = statement.executeQuery();
@@ -228,7 +228,7 @@ public class Database {
 
 	public Track getNextTrackFromDB( Track currentTrack ) {
 		int trackID;
-
+		currentTrack.fetchTrackData();
 		//get next track id from current track title
 		try {
 

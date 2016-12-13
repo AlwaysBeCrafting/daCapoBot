@@ -68,10 +68,12 @@ public class Playlist {
 
 	public Track nextInList(Track currentTrack) {
 
-			if(tracks.size() == 1){
-				tracks.add(Database.DB_INSTANCE.getNextTrackFromDB(tracks.get(0)));
+			if(tracks.size() > 1) {
+				tracks.remove( 0 );
 			}
-			tracks.remove( 0 );
+			if(tracks.size() <= 1){
+				tracks.add(Database.DB_INSTANCE.getNextTrackFromDB(currentTrack));
+			}
 			return 	tracks.get( 0 );
 	}
 
