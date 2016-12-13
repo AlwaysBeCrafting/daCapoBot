@@ -10,10 +10,6 @@ import java.util.stream.Stream;
 //==============================================================================
 public class Playlist {
 	//--------------------------------------------------------------------------
-
-//todo ability to request songs
-//todo  play tracks from position
-//todo 	eventually set it to use a sqllite db for upvote/downvote, skip count ...
 	private File dir;
 	private List<Track> tracks;
 
@@ -72,8 +68,9 @@ public class Playlist {
 				tracks.remove( 0 );
 			}
 			if(tracks.size() <= 1){
-				tracks.add(Database.DB_INSTANCE.getNextTrackFromDB(currentTrack));
+				tracks.addAll(Database.DB_INSTANCE.getAfter(currentTrack,10));
 			}
+		System.out.println(tracks.size());
 			return 	tracks.get( 0 );
 	}
 

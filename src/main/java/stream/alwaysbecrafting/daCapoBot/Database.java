@@ -115,13 +115,12 @@ public class Database {
 
 	}
 
-	//--------------------------------------------------------------------------
-
 	private void createTableTracks(){
 
 		String sql = "CREATE TABLE IF NOT EXISTS Tracks (\n"
 				+ "	id integer PRIMARY KEY,\n"
 				+ "	Title text COLLATE NOCASE,\n"
+				+ " TitleNoSpace text COLLATE NOCASE,\n"
 				+ " Path text NOT NULL,\n"
 				+ " Artist text COLLATE NOCASE,\n"
 				+ " Album text COLLATE NOCASE,\n"
@@ -137,9 +136,8 @@ public class Database {
 		}
 
 	}
-	//--------------------------------------------------------------------------
 
-	public void insertToTracks(Playlist playlist){
+	public void insertIntoTracksTable( Playlist playlist){
 
 		List<String> pathsFromDB = new ArrayList<>();
 
@@ -207,11 +205,9 @@ public class Database {
 		}
 	}
 
-	//--------------------------------------------------------------------------
-
-	public Track getFirstTrackFromDB(){
+	public Track getFirst(){
 		try {
-			String select = "SELECT Path FROM Tracks WHERE id > 0 LIMIT 1";
+			String select = "SELECT Path FROM Tracks ORDER BY id ASC LIMIT 1";
 
 			PreparedStatement statement = connection.prepareStatement( select );
 			ResultSet rs = statement.executeQuery();
@@ -224,11 +220,11 @@ public class Database {
 		}
 	}
 
-	//--------------------------------------------------------------------------
-
-	public Track getNextTrackFromDB( Track currentTrack ) {
+	public List<Track> getAfter( Track currentTrack, int numberToGet ) {
 		int trackID;
 		currentTrack.fetchTrackData();
+		List<Track> trackList = new ArrayList<>();
+
 		//get next track id from current track title
 		try {
 
@@ -240,16 +236,19 @@ public class Database {
 			if ( rs.next() ) {
 				trackID = rs.getInt( "id" );
 
-				select = "SELECT Path FROM Tracks WHERE id > ? LIMIT 1";
+				select = "SELECT Path FROM Tracks WHERE id > ? LIMIT ?";
 
 				statement = connection.prepareStatement( select );
 				statement.setInt( 1, trackID );
+				statement.setInt( 2, numberToGet);
 				rs = statement.executeQuery();
-
-				return new Track( new File( rs.getString( "Path" ) ) );
+				while(rs.next()){
+				trackList.add( new Track( new File( rs.getString( "Path" ))));
+				}
 			} else {
-				return getFirstTrackFromDB();
+				trackList.add( getFirst());
 			}
+			return trackList;
 		}
 		catch(Exception e){
 			e.printStackTrace();

@@ -8,13 +8,11 @@ import org.pircbotx.hooks.events.MessageEvent;
 public class BotListener extends ListenerAdapter{
 	//--------------------------------------------------------------------------
 	Player p1;
-	Playlist sideA;
-	Database db;
 
 	@Override
 	public void onMessage(MessageEvent event) throws Exception{
 		if(event.getUser().getRealName() != null) {
-			db.logChat( event.getUser().getRealName(), event.getMessage() );
+			Database.DB_INSTANCE.logChat( event.getUser().getRealName(), event.getMessage() );
 		}
 		if (event.getMessage().toLowerCase().startsWith( "!help" ))
 			event.respondWith( "!help, !veto, !request, !whoami, !suggestions"  );
@@ -35,9 +33,9 @@ public class BotListener extends ListenerAdapter{
 	@Override
 	public void onConnect( ConnectEvent event ){
 		try {
-			sideA = new Config().getPlaylist();
-			Database.DB_INSTANCE.insertToTracks(sideA);
-			this.p1 = new Player();
+			Playlist sideA = new Config().getPlaylist();
+			Database.DB_INSTANCE.insertIntoTracksTable(sideA);
+			Player p1 = new Player();
 			p1.setPlaylist( sideA );
 			p1.play();
 		}
