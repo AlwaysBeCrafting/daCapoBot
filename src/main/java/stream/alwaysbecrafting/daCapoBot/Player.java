@@ -3,6 +3,8 @@ package stream.alwaysbecrafting.daCapoBot;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javafx.embed.swing.JFXPanel;
 import javafx.scene.media.Media;
@@ -14,14 +16,16 @@ public class Player {
 	private MediaPlayer player;
 	private boolean playerRunning = false;
 	private Track currentTrack;
-	private Playlist currentPlaylist;
+	private List<Track> trackQueue = new ArrayList<>();
+
+	public Player(){
+		setQueue();
+	}
 
 	//--------------------------------------------------------------------------
-	public void setPlaylist( Playlist currentPlaylist ) {
-		this.currentPlaylist = currentPlaylist;
-		this.currentPlaylist.clear();
-		this.currentPlaylist.add(Database.DB_INSTANCE.getFirst());
-		this.currentTrack = this.currentPlaylist.getTrack( 0 );
+	public void setQueue() {
+		this.trackQueue.add(Database.DB_INSTANCE.getFirst());
+		this.currentTrack = this.trackQueue.get( 0 );
 
 		initializePlayer();
 
@@ -69,7 +73,7 @@ public class Player {
 	//--------------------------------------------------------------------------
 
 	public void nextTrack() {
-		currentTrack = currentPlaylist.nextInList( currentTrack );
+		currentTrack = nextInList( currentTrack );
 		play();
 	}
 
@@ -77,7 +81,7 @@ public class Player {
 
 	public void veto() {
 		currentTrack.downvote();
-		currentTrack = currentPlaylist.nextInList( currentTrack );
+		currentTrack = nextInList( currentTrack );
 		play();
 	}
 
@@ -88,5 +92,15 @@ public class Player {
 	}
 	//--------------------------------------------------------------------------
 
+	public Track nextInList(Track currentTrack) {
+
+		trackQueue.remove( 0 );
+
+		if(trackQueue.isEmpty()){
+			trackQueue.addAll(Database.DB_INSTANCE.getAfter(currentTrack,10));
+		}
+		System.out.println(trackQueue.size());
+		return 	trackQueue.get( 0 );
+	}
 }
 //------------------------------------------------------------------------------

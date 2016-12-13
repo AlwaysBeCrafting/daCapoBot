@@ -2,6 +2,8 @@ package stream.alwaysbecrafting.daCapoBot;
 
 import org.pircbotx.Configuration;
 
+import java.io.File;
+
 //==============================================================================
 public class Config {
 	public Configuration botConfiguration;
@@ -22,9 +24,9 @@ public class Config {
 	}
 	//--------------------------------------------------------------------------
 
-	public Playlist getPlaylist(){
+	public File getMusicDir(){
 		//set the directory where music will be located
-		return new Playlist( "/home/mh/Music/OC ReMix - 1 to 3000 [v20141015]" );
+		return new File( "/home/mh/Music/OC ReMix - 1 to 3000 [v20141015]" );
 	}
 }
 //------------------------------------------------------------------------------

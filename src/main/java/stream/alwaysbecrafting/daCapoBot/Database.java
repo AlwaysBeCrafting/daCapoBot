@@ -10,6 +10,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -19,10 +20,14 @@ public class Database {
 	private static Connection connection;
 	public static final Database DB_INSTANCE = new Database();
 
-
 	private Database() {
 		connect();
 	}
+
+	//--------------------------------------------------------------------------
+
+
+
 
 	//--------------------------------------------------------------------------
 
@@ -137,7 +142,19 @@ public class Database {
 
 	}
 
-	public void insertIntoTracksTable( Playlist playlist){
+	public void insertIntoTracksTable( File path){
+		List<Track> tracks = new ArrayList<>();
+
+		try{
+			tracks = Arrays.stream( path.listFiles() )
+					.filter( track -> track.getName().endsWith( ".mp3" ) )
+					.map( Track::new )
+					.collect( Collectors.toList()
+					);
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
 
 		List<String> pathsFromDB = new ArrayList<>();
 
@@ -157,7 +174,7 @@ public class Database {
 				e.printStackTrace();
 			}
 
-		List<Track> tracksToInsert = playlist
+		List<Track> tracksToInsert = tracks
 				.stream()
 				.filter( track -> !pathsFromDB.contains( track.getCanonicalPath() ) )
 				.collect( Collectors.toList() );
