@@ -17,10 +17,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 //==============================================================================
-public class Database {
+class Database {
 	//--------------------------------------------------------------------------
+	static final Database DB_INSTANCE = new Database();
 	private static Connection connection;
-	public static final Database DB_INSTANCE = new Database();
 
 	private Database() {
 		connect();
@@ -28,7 +28,7 @@ public class Database {
 
 	//--------------------------------------------------------------------------
 
-	static String getDBPath(){
+	private static String getDBPath(){
 		try{
 		File db = new File("daCapoBot.db");
 			return db.getCanonicalPath();
@@ -140,7 +140,9 @@ public class Database {
 
 	}
 
-	public void insertIntoTracksTable( File dir){
+	void insertIntoTracksTable( File dir){
+
+		System.out.println("Checking for tracks to insert...");
 		List<Track> tracks = Collections.emptyList();
 
 		try{
@@ -211,7 +213,7 @@ public class Database {
 		}
 	}
 
-	public void logChat( String user, String message ) {
+	void logChat( String user, String message ) {
 		String sql = "INSERT INTO chat_log(timestamp,user,message) VALUES(?,?,?)";
 
 		try {
@@ -225,7 +227,7 @@ public class Database {
 		}
 	}
 
-	public Track getFirst(){
+	Track getFirst(){
 		try {
 			String select = "SELECT path FROM tracks ORDER BY id ASC LIMIT 1";
 
@@ -240,7 +242,7 @@ public class Database {
 		}
 	}
 
-	public List<Track> getAfter( Track currentTrack, int numberToGet ) {
+	List<Track> getAfter( Track currentTrack, int numberToGet ) {
 		int trackID;
 		currentTrack.fetchTrackData();
 		List<Track> trackList = new ArrayList<>();
@@ -276,5 +278,8 @@ public class Database {
 		}
 	}
 
+	void request( String s ) {}
+
+	void veto() {}
 }
 //------------------------------------------------------------------------------

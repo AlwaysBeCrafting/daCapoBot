@@ -8,12 +8,12 @@ import java.io.File;
 import java.io.IOException;
 
 //==============================================================================
-public class Track {
+class Track {
 	//--------------------------------------------------------------------------
-	public File file;
-	public String title;
-	public String artist;
-	public String album;
+	File file;
+	String title;
+	String artist;
+	String album;
 
 	//--------------------------------------------------------------------------
 
@@ -23,7 +23,7 @@ public class Track {
 
 	//--------------------------------------------------------------------------
 
-	public String toURIString(){
+	String toURIString(){
 		if(!this.file.exists()){
 			System.out.println("Error: File does not Exist: " + this.file.toString());
 			throw new RuntimeException(	);
@@ -34,7 +34,7 @@ public class Track {
 
 	//--------------------------------------------------------------------------
 
-	public String getCanonicalPath(){
+	String getCanonicalPath(){
 		try {
 			return this.file.getCanonicalPath();
 		} catch ( IOException e ) {
@@ -53,7 +53,7 @@ public class Track {
 
 	//--------------------------------------------------------------------------
 
-	public boolean fetchTrackData(){
+	boolean fetchTrackData(){
 		try {
 			Mp3File mp3file = new Mp3File( this.file );
 
@@ -76,10 +76,6 @@ public class Track {
 		}
 		return false;
 	}
-
-	public void downvote() {}
-
-	public void upvote() {}
 }
 
 //------------------------------------------------------------------------------

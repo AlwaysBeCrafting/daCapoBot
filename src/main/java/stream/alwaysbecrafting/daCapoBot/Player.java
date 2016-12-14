@@ -11,19 +11,19 @@ import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 
 //==============================================================================
-public class Player {
+class Player {
 	//--------------------------------------------------------------------------
 	private MediaPlayer player;
 	private boolean playerRunning = false;
 	private Track currentTrack;
 	private List<Track> trackQueue = new ArrayList<>();
 
-	public Player(){
+	Player(){
 		setQueue();
 	}
 
 	//--------------------------------------------------------------------------
-	public void setQueue() {
+	void setQueue() {
 		this.trackQueue.add(Database.DB_INSTANCE.getFirst());
 		this.currentTrack = this.trackQueue.get( 0 );
 
@@ -34,7 +34,7 @@ public class Player {
 
 	//--------------------------------------------------------------------------
 
-	public void initializePlayer(){
+	void initializePlayer(){
 		if ( playerRunning ) {
 			player.stop();
 		}
@@ -47,7 +47,7 @@ public class Player {
 
 	}
 
-	public void play() {
+	void play() {
 		initializePlayer();
 
 		if(currentTrack.fetchTrackData()){
@@ -72,27 +72,14 @@ public class Player {
 
 	//--------------------------------------------------------------------------
 
-	public void nextTrack() {
+	void nextTrack() {
 		currentTrack = nextInList( currentTrack );
 		play();
 	}
 
 	//--------------------------------------------------------------------------
 
-	public void veto() {
-		currentTrack.downvote();
-		currentTrack = nextInList( currentTrack );
-		play();
-	}
-
-	public void request( String s ) {
-		currentTrack.upvote();
-		System.out.println(s);
-
-	}
-	//--------------------------------------------------------------------------
-
-	public Track nextInList(Track currentTrack) {
+	Track nextInList(Track currentTrack) {
 
 		trackQueue.remove( 0 );
 

@@ -5,10 +5,8 @@ import org.pircbotx.hooks.events.ConnectEvent;
 import org.pircbotx.hooks.events.MessageEvent;
 
 //==============================================================================
-public class BotListener extends ListenerAdapter{
+class BotListener extends ListenerAdapter{
 	//--------------------------------------------------------------------------
-	Player p1;
-
 	@Override
 	public void onMessage(MessageEvent event) throws Exception{
 		if(event.getUser().getRealName() != null) {
@@ -17,9 +15,9 @@ public class BotListener extends ListenerAdapter{
 		if (event.getMessage().toLowerCase().startsWith( "!help" ))
 			event.respondWith( "!whoami, !help, !veto, !request, !suggestions"  );
 		if (event.getMessage().toLowerCase().startsWith( "!veto" ))
-			p1.veto();
+			Database.DB_INSTANCE.veto();
 		if (event.getMessage().toLowerCase().startsWith( "!request" ))
-			p1.request(event.getMessage().toLowerCase());
+			Database.DB_INSTANCE.request(event.getMessage().toLowerCase());
 		if (event.getMessage().toLowerCase().startsWith( "!whoami" ))
 			event.respondWith( "I'm your friendly music bot. For a list of commands type !help. " +
 					"for my source code visit https://github.com/AlwaysBeCrafting/daCapoBot" );
