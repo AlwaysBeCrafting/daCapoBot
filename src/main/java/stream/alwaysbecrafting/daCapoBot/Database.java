@@ -12,6 +12,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -140,7 +141,7 @@ public class Database {
 	}
 
 	public void insertIntoTracksTable( File dir){
-		List<Track> tracks = new ArrayList<>();
+		List<Track> tracks = Collections.emptyList();
 
 		try{
 			tracks = Files.walk( dir.toPath(), FileVisitOption.FOLLOW_LINKS  )
