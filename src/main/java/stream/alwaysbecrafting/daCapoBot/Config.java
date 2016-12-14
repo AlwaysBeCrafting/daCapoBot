@@ -26,7 +26,7 @@ public class Config {
 
 	public File getMusicDir(){
 		//set the directory where music will be located
-		return new File( "/home/mh/Music/OC ReMix - 1 to 3000 [v20141015]" );
+		return new File( "/home/mh/Music/" );
 	}
 }
 //------------------------------------------------------------------------------

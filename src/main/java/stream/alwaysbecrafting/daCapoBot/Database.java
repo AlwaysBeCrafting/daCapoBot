@@ -2,6 +2,8 @@ package stream.alwaysbecrafting.daCapoBot;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileVisitOption;
+import java.nio.file.Files;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
@@ -10,7 +12,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,11 +24,6 @@ public class Database {
 	private Database() {
 		connect();
 	}
-
-	//--------------------------------------------------------------------------
-
-
-
 
 	//--------------------------------------------------------------------------
 
@@ -64,17 +60,17 @@ public class Database {
 			connection = DriverManager.getConnection( url );
 			System.out.println( "Connection to SQLite has been established." );
 
-			System.out.println( "Checking if table 'Tracks' exists...");
+			System.out.println( "Checking if tables 'tracks' & 'chat_log' exists...");
 			DatabaseMetaData md = connection.getMetaData();
 			ResultSet tables = md.getTables( null, null, "%", null);
 			while(tables.next()){
-				if(tables.getString(3).equals("Tracks") || tableTracksExists == true){
+				if(tables.getString(3).equals("tracks") || tableTracksExists == true){
 					tableTracksExists = true;
 				}
 				else{
 					tableTracksExists = false;
 				}
-				if(tables.getString(3).equals("ChatLog") || tableChatLogExists == true){
+				if(tables.getString(3).equals("chat_log") || tableChatLogExists == true){
 					tableChatLogExists = true;
 				}
 				else{
@@ -103,11 +99,11 @@ public class Database {
 
 	private void createTableChatLog() {
 
-		String sql = "CREATE TABLE IF NOT EXISTS ChatLog (\n"
+		String sql = "CREATE TABLE IF NOT EXISTS chat_log (\n"
 				+ "	id integer PRIMARY KEY,\n"
-				+ "	Timestamp long NOT NULL,\n"
-				+ " User text COLLATE NOCASE,\n"
-				+ " Message text COLLATE NOCASE\n"
+				+ "	timestamp long NOT NULL,\n"
+				+ " user text COLLATE NOCASE,\n"
+				+ " message text COLLATE NOCASE\n"
 				+ ");";
 
 		try{
@@ -122,14 +118,15 @@ public class Database {
 
 	private void createTableTracks(){
 
-		String sql = "CREATE TABLE IF NOT EXISTS Tracks (\n"
+		String sql = "CREATE TABLE IF NOT EXISTS tracks (\n"
 				+ "	id integer PRIMARY KEY,\n"
-				+ "	Title text COLLATE NOCASE,\n"
-				+ " TitleNoSpace text COLLATE NOCASE,\n"
-				+ " Path text NOT NULL,\n"
-				+ " Artist text COLLATE NOCASE,\n"
-				+ " Album text COLLATE NOCASE,\n"
-				+ " Rating DECIMAL(3,2)\n"
+				+ "	title text COLLATE NOCASE,\n"
+				+ " short_name text COLLATE NOCASE,\n"
+				+ " path text NOT NULL,\n"
+				+ " artist text COLLATE NOCASE,\n"
+				+ " album text COLLATE NOCASE,\n"
+				+ " requests INTEGER,\n"
+				+ " vetoes INTEGER\n"
 				+ ");";
 
 		try{
@@ -142,15 +139,14 @@ public class Database {
 
 	}
 
-	public void insertIntoTracksTable( File path){
+	public void insertIntoTracksTable( File dir){
 		List<Track> tracks = new ArrayList<>();
 
 		try{
-			tracks = Arrays.stream( path.listFiles() )
-					.filter( track -> track.getName().endsWith( ".mp3" ) )
-					.map( Track::new )
-					.collect( Collectors.toList()
-					);
+			tracks = Files.walk( dir.toPath(), FileVisitOption.FOLLOW_LINKS  )
+				        .filter( path -> path.toString().endsWith( ".mp3" ) )
+						.map( path -> new Track( path.toFile() ))
+					    .collect( Collectors.toList() );
 		}
 		catch(Exception e){
 			e.printStackTrace();
@@ -158,16 +154,16 @@ public class Database {
 
 		List<String> pathsFromDB = new ArrayList<>();
 
-		String sql = "INSERT INTO Tracks(Title,Path,Artist,Album,Rating) VALUES(?,?,?,?,50)";
+		String sql = "INSERT INTO tracks(title,short_name,path,artist,album,requests,vetoes) VALUES(?,?,?,?,?,0,0)";
 
 		try{
-			 String select = "SELECT Path FROM Tracks";
+			 String select = "SELECT path FROM tracks";
 		     Statement stmt  = connection.createStatement();
 		     ResultSet rs    = stmt.executeQuery(select);
 
 				// loop through the result set
 				while ( rs.next() ) {
-					pathsFromDB.add( rs.getString( "Path" ) );
+					pathsFromDB.add( rs.getString( "path" ) );
 				}
 			}
 			catch(Exception e){
@@ -179,25 +175,31 @@ public class Database {
 				.filter( track -> !pathsFromDB.contains( track.getCanonicalPath() ) )
 				.collect( Collectors.toList() );
 
-		tracksToInsert.forEach( Track::fetchTrackData );
+
+		tracksToInsert.parallelStream().forEach( Track::fetchTrackData );
 
 		try {
 			connection.setAutoCommit( false );
 		} catch ( SQLException e ) {
 			e.printStackTrace();
 		}
-		tracksToInsert.forEach( track -> {
-			try {
-				PreparedStatement statement = connection.prepareStatement( sql );
-				statement.setString( 1, track.title );
-				statement.setString( 2, track.file.getCanonicalPath() );
-				statement.setString( 3, track.artist );
-				statement.setString( 4, track.album );
-				statement.executeUpdate();
-			} catch ( Exception e ) {
-				e.printStackTrace();
-			}
-		} );
+		try {
+			PreparedStatement statement = connection.prepareStatement( sql );
+			tracksToInsert.forEach( track -> {
+				try {
+					statement.setString( 1, track.title );
+					statement.setString( 2, "" );
+					statement.setString( 3, track.file.getCanonicalPath() );
+					statement.setString( 4, track.artist );
+					statement.setString( 5, track.album );
+					statement.executeUpdate();
+				} catch ( Exception e ) {
+					e.printStackTrace();
+				}
+			} );
+		} catch ( Exception e ) {
+			e.printStackTrace();
+		}
 
 		try {
 			connection.commit();
@@ -209,7 +211,7 @@ public class Database {
 	}
 
 	public void logChat( String user, String message ) {
-		String sql = "INSERT INTO ChatLog(Timestamp,User,Message) VALUES(?,?,?)";
+		String sql = "INSERT INTO chat_log(timestamp,user,message) VALUES(?,?,?)";
 
 		try {
 			PreparedStatement statement = connection.prepareStatement( sql );
@@ -224,12 +226,12 @@ public class Database {
 
 	public Track getFirst(){
 		try {
-			String select = "SELECT Path FROM Tracks ORDER BY id ASC LIMIT 1";
+			String select = "SELECT path FROM tracks ORDER BY id ASC LIMIT 1";
 
 			PreparedStatement statement = connection.prepareStatement( select );
 			ResultSet rs = statement.executeQuery();
 
-			return new Track( new File( rs.getString( "Path" ) ) );
+			return new Track( new File( rs.getString( "path" ) ) );
 		}
 		catch(Exception e){
 			e.printStackTrace();
@@ -245,7 +247,7 @@ public class Database {
 		//get next track id from current track title
 		try {
 
-			String select = "SELECT id FROM Tracks WHERE Title = ? LIMIT 1";
+			String select = "SELECT id FROM tracks WHERE title = ? LIMIT 1";
 			PreparedStatement statement = connection.prepareStatement( select );
 			statement.setString( 1, currentTrack.title );
 
@@ -253,14 +255,14 @@ public class Database {
 			if ( rs.next() ) {
 				trackID = rs.getInt( "id" );
 
-				select = "SELECT Path FROM Tracks WHERE id > ? LIMIT ?";
+				select = "SELECT path FROM tracks WHERE id > ? LIMIT ?";
 
 				statement = connection.prepareStatement( select );
 				statement.setInt( 1, trackID );
 				statement.setInt( 2, numberToGet);
 				rs = statement.executeQuery();
 				while(rs.next()){
-				trackList.add( new Track( new File( rs.getString( "Path" ))));
+				trackList.add( new Track( new File( rs.getString( "path" ))));
 				}
 			} else {
 				trackList.add( getFirst());
