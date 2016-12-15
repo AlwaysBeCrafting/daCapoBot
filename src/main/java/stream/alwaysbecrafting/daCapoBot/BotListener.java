@@ -31,7 +31,7 @@ class BotListener extends ListenerAdapter{
 	@Override
 	public void onConnect( ConnectEvent event ){
 		try {
-			Database.DB_INSTANCE.insertIntoTracksTable(new Config().getMusicDir());
+			Database.DB_INSTANCE.addMP3s(new Config().getMusicDir());
 
 			Player p1 = new Player();
 			p1.play();

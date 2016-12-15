@@ -22,7 +22,6 @@ class Player {
 		setQueue();
 	}
 
-	//--------------------------------------------------------------------------
 	void setQueue() {
 		this.trackQueue.add(Database.DB_INSTANCE.getFirst());
 		this.currentTrack = this.trackQueue.get( 0 );
@@ -30,9 +29,6 @@ class Player {
 		initializePlayer();
 
 	}
-
-
-	//--------------------------------------------------------------------------
 
 	void initializePlayer(){
 		if ( playerRunning ) {
@@ -70,14 +66,10 @@ class Player {
 		player.setOnEndOfMedia(this::nextTrack);
 }
 
-	//--------------------------------------------------------------------------
-
 	void nextTrack() {
 		currentTrack = nextInList( currentTrack );
 		play();
 	}
-
-	//--------------------------------------------------------------------------
 
 	Track nextInList(Track currentTrack) {
 

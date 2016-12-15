@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.sql.Connection;
-import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -19,6 +18,8 @@ import java.util.stream.Collectors;
 //==============================================================================
 class Database {
 	//--------------------------------------------------------------------------
+	/* TODO: 12/14/16 in your application, you should probably look at the query
+		 plan for searching by title and short_name because those will be used very often*/
 	static final Database DB_INSTANCE = new Database();
 	private static Connection connection;
 
@@ -26,33 +27,26 @@ class Database {
 		connect();
 	}
 
-	//--------------------------------------------------------------------------
-
-	private static String getDBPath(){
-		try{
-		File db = new File("daCapoBot.db");
+	private static String getDBPath() {
+		try {
+			File db = new File( "daCapoBot.db" );
 			return db.getCanonicalPath();
-		}
-		catch ( IOException e ){
+		} catch ( IOException e ) {
 			e.printStackTrace();
 		}
 		return "";
 	}
 
-	//--------------------------------------------------------------------------
-
 	private void connect() {
-		if( connection != null){
-			try{
+		if ( connection != null ) {
+			try {
 				connection.close();
-			}catch(SQLException e){
-				System.out.println(e.getMessage());
+			} catch ( SQLException e ) {
+				e.printStackTrace();
 			}
 		}
 
 		connection = null;
-		boolean tableTracksExists = false;
-		boolean tableChatLogExists = false;
 
 		try {
 			// db parameters
@@ -60,51 +54,28 @@ class Database {
 			// create a connection to the database
 			connection = DriverManager.getConnection( url );
 			System.out.println( "Connection to SQLite has been established." );
-
-			System.out.println( "Checking if tables 'tracks' & 'chat_log' exists...");
-			DatabaseMetaData md = connection.getMetaData();
-			ResultSet tables = md.getTables( null, null, "%", null);
-			while(tables.next()){
-				if(tables.getString(3).equals("tracks") || tableTracksExists == true){
-					tableTracksExists = true;
-				}
-				else{
-					tableTracksExists = false;
-				}
-				if(tables.getString(3).equals("chat_log") || tableChatLogExists == true){
-					tableChatLogExists = true;
-				}
-				else{
-					tableChatLogExists = false;
-				}
-			}
-			if(!tableTracksExists){
-				System.out.println("Table 'Tracks' does not exist, creating...");
-				createTableTracks();
-			}
-			else{
-					System.out.println("Table Tracks Exists");
-			}
-			if(!tableChatLogExists){
-				System.out.println("Table 'ChatLog' does not exist, creating...");
-				createTableChatLog();
-			}
-			else{
-					System.out.println("Table ChatLog Exists");
-			}
-		}
-		catch (SQLException e) {
-			System.out.println(e.getMessage());
+			checkIfTablesExist();
+		} catch ( SQLException e ) {
+			e.printStackTrace();
 		}
 	}
 
-	private void createTableChatLog() {
+	private void checkIfTablesExist() {
+		System.out.println( "Creating tables..." );
+		createTableTracks();
+		createTableChatLog();
+		createTableRequests();
+		createTableVetoes();
+		System.out.println( "Tables created." );
+	}
 
-		String sql = "CREATE TABLE IF NOT EXISTS chat_log (\n"
-				+ "	id integer PRIMARY KEY,\n"
-				+ "	timestamp long NOT NULL,\n"
-				+ " user text COLLATE NOCASE,\n"
-				+ " message text COLLATE NOCASE\n"
+	private void createTableChatLog() {
+		System.out.println("\tchat_log");
+		String sql = "CREATE TABLE IF NOT EXISTS chat_log ("
+				+ "id          integer     PRIMARY KEY,"
+				+ "timestamp   long        NOT NULL,"
+				+ "user        text        COLLATE NOCASE,"
+				+ "message     text        COLLATE NOCASE"
 				+ ");";
 
 		try{
@@ -112,35 +83,79 @@ class Database {
 			// create a new table
 			stmt.execute(sql);
 		} catch (SQLException e) {
-			System.out.println(e.getMessage());
+			e.printStackTrace();
 		}
-
 	}
 
 	private void createTableTracks(){
+		System.out.println("\ttracks");
 
-		String sql = "CREATE TABLE IF NOT EXISTS tracks (\n"
-				+ "	id integer PRIMARY KEY,\n"
-				+ "	title text COLLATE NOCASE,\n"
-				+ " short_name text COLLATE NOCASE,\n"
-				+ " path text NOT NULL,\n"
-				+ " artist text COLLATE NOCASE,\n"
-				+ " album text COLLATE NOCASE,\n"
-				+ " requests INTEGER,\n"
-				+ " vetoes INTEGER\n"
-				+ ");";
+		String sql = "CREATE TABLE IF NOT EXISTS tracks ("
+				+ "id          integer     PRIMARY KEY    ,"
+				+ "title       text        COLLATE NOCASE ,"
+				+ "short_name  text        COLLATE NOCASE ,"
+				+ "path        text        NOT NULL       ,"
+				+ "artist      text        COLLATE NOCASE ,"
+				+ "album       text        COLLATE NOCASE ,"
+				+ ");                                       ";
 
 		try{
 		Statement stmt = connection.createStatement();
 			// create a new table
 			stmt.execute(sql);
 		} catch (SQLException e) {
-			System.out.println(e.getMessage());
+			e.printStackTrace();
+		}
+
+
+	}
+
+	private void createTableRequests(){
+		System.out.println("\trequest");
+
+		String sql =
+				"CREATE TABLE IF NOT EXISTS requests ("
+				+ "id          integer PRIMARY KEY                ,"
+				+ "timestamp   long    NOT NULL                   ,"
+				+ "user        text    COLLATE NOCASE             ,"
+				+ "track_id    integer NOT NULL                   ,"
+				+ "                                                "
+				+ "FOREIGN KEY (track_id) REFERENCES tracks(id)    "
+				+ ");";
+
+		try{
+			Statement stmt = connection.createStatement();
+			// create a new table
+			stmt.execute(sql);
+		} catch (SQLException e) {
+			e.printStackTrace();
 		}
 
 	}
 
-	void insertIntoTracksTable( File dir){
+	private void createTableVetoes(){
+		System.out.println("\tvetoes");
+
+		String sql =
+				"CREATE TABLE IF NOT EXISTS vetoes ("
+						+ "id          integer PRIMARY KEY     ,"
+						+ "timestamp   long    NOT NULL        ,"
+						+ "user        text    COLLATE NOCASE  ,"
+						+ "track_id    integer NOT NULL        ,"
+						+ "                                     "
+						+ "FOREIGN KEY (track_id) REFERENCES tracks(id)"
+						+ ");";
+
+		try{
+			Statement stmt = connection.createStatement();
+			// create a new table
+			stmt.execute(sql);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+	void addMP3s( File dir){
 
 		System.out.println("Checking for tracks to insert...");
 		List<Track> tracks = Collections.emptyList();
