@@ -18,9 +18,7 @@ class Player {
 	private Track currentTrack;
 	private List<Track> trackQueue = new ArrayList<>();
 
-	Player(){
-		setQueue();
-	}
+	Player(){}
 
 	void setQueue() {
 		this.trackQueue.add(Database.DB_INSTANCE.getFirst());
@@ -81,5 +79,22 @@ class Player {
 		System.out.println(trackQueue.size());
 		return 	trackQueue.get( 0 );
 	}
+
+	public boolean veto( String user, String short_name ) {
+		short_name.replace( "!veto ", "" );
+		if(!Database.DB_INSTANCE.addToVeto(user, short_name.replace( "!veto ", "" ))){
+			return false;
+		}
+		if( Database.DB_INSTANCE.getShortName( currentTrack.title ).contains( short_name.replace( "!veto ", "" ) )){
+			nextTrack();
+		}
+		if( Database.DB_INSTANCE.getShortName( currentTrack.title ).equalsIgnoreCase( "can't find short name")){
+			System.out.println("can't find short name");
+			return false;
+		}
+		return true;
+	}
+
+	public void request( String s ) {}
 }
 //------------------------------------------------------------------------------
