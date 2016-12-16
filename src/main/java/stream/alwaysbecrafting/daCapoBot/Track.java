@@ -10,8 +10,11 @@ import java.io.IOException;
 //==============================================================================
 class Track {
 	//--------------------------------------------------------------------------
-	File file;
+	int id;
+	long timestamp;
 	String title;
+	String shortName;
+	File file;
 	String artist;
 	String album;
 
@@ -76,6 +79,7 @@ class Track {
 		}
 		return false;
 	}
+
 }
 
 //------------------------------------------------------------------------------

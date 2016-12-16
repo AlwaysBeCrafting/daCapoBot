@@ -3,26 +3,25 @@ package stream.alwaysbecrafting.daCapoBot;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.List;
 
 import javafx.embed.swing.JFXPanel;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
+
+import static stream.alwaysbecrafting.daCapoBot.Database.DB_INSTANCE;
 
 //==============================================================================
 class Player {
 	//--------------------------------------------------------------------------
 	private MediaPlayer player;
 	private boolean playerRunning = false;
+	private long timestamp = 0;
 	private Track currentTrack;
-	private List<Track> trackQueue = new ArrayList<>();
 
 	Player(){}
 
 	void setQueue() {
-		this.trackQueue.add(Database.DB_INSTANCE.getFirst());
-		this.currentTrack = this.trackQueue.get( 0 );
+		this.currentTrack = DB_INSTANCE.getFirst();
 
 		initializePlayer();
 
@@ -53,11 +52,8 @@ class Player {
 			writer.println( currentTrack.title );
 			writer.close();
 		}
-		catch (FileNotFoundException e){
+		catch (FileNotFoundException | UnsupportedEncodingException e){
 			e.printStackTrace();
-		}
-		catch (UnsupportedEncodingException f){
-			f.printStackTrace();
 		}
 
 		this.player.play();
@@ -65,36 +61,46 @@ class Player {
 }
 
 	void nextTrack() {
-		currentTrack = nextInList( currentTrack );
+		Track requestedTrack = Database.DB_INSTANCE.getNextRequested( timestamp );
+		if ( requestedTrack != null ) {
+			timestamp = requestedTrack.timestamp;
+			this.currentTrack = requestedTrack;
+		} else {
+			this.currentTrack = Database.DB_INSTANCE.getAfter( currentTrack, 1 ).get( 0 );
+		}
 		play();
 	}
 
-	Track nextInList(Track currentTrack) {
 
-		trackQueue.remove( 0 );
+	boolean veto( String user, String short_name ) {
+		if(!DB_INSTANCE.addToVeto(user, short_name.replaceAll( "!veto\\s+", "" ))){
 
-		if(trackQueue.isEmpty()){
-			trackQueue.addAll(Database.DB_INSTANCE.getAfter(currentTrack,10));
-		}
-		System.out.println(trackQueue.size());
-		return 	trackQueue.get( 0 );
-	}
-
-	public boolean veto( String user, String short_name ) {
-		short_name.replace( "!veto ", "" );
-		if(!Database.DB_INSTANCE.addToVeto(user, short_name.replace( "!veto ", "" ))){
 			return false;
 		}
-		if( Database.DB_INSTANCE.getShortName( currentTrack.title ).contains( short_name.replace( "!veto ", "" ) )){
+		if( currentTrack.title
+				.toLowerCase()
+				.replaceAll( "[^a-z0-9]+", "-" )
+				.contains( (short_name.replace( "!veto ", "" )) )){
+
 			nextTrack();
 		}
-		if( Database.DB_INSTANCE.getShortName( currentTrack.title ).equalsIgnoreCase( "can't find short name")){
+		if( currentTrack.title
+				.toLowerCase()
+				.replaceAll( "[^a-z0-9]+", "-" )
+				.equalsIgnoreCase( "can't find short name")){
+
 			System.out.println("can't find short name");
 			return false;
 		}
 		return true;
 	}
 
-	public void request( String s ) {}
+	boolean request( String user, String short_name ) {
+		if(!DB_INSTANCE.addRequest(currentTrack, user, short_name.replaceAll( "!request\\s+", "" ))){
+			System.out.println("can't find " + short_name);
+			return false;
+		}
+		return true;
+	}
 }
 //------------------------------------------------------------------------------

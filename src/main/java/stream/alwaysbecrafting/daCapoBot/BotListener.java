@@ -16,20 +16,30 @@ class BotListener extends ListenerAdapter{
 		}
 
 		if (event.getMessage().toLowerCase().startsWith( "!help" ))
-			event.respondWith( "!whoami, !help, !veto, !request, !suggestions"  );
+			event.respondWith( "!whoru, !help, !veto, !request, !suggestions"  );
 
 		if (event.getMessage().toLowerCase().startsWith( "!veto" ))
 			if(event.getUser().getRealName() != null) {
-				if ( !PLAYER.veto( event.getUser().getRealName(), event.getMessage().toLowerCase() ) ) {
-					event.respondWith( "Sorry, I can't find " + event.getMessage().toLowerCase().replace( "!veto", "" )
+				if ( !PLAYER.veto( event.getUser().getRealName()
+						, event.getMessage().toLowerCase().replaceAll( "!veto\\s+", "" ) ) ) {
+
+					event.respondWith( "Sorry, I can't find "
+							+ event.getMessage().toLowerCase().replaceAll( "!veto\\s+", "" )
 							+ ". Could you be more specific?" );
 				}
 			}
 
 		if (event.getMessage().toLowerCase().startsWith( "!request" ))
-			PLAYER.request(event.getMessage().toLowerCase());
+			if(event.getUser().getRealName() != null) {
+				if (!PLAYER.request( event.getUser().getRealName()
+						, event.getMessage().toLowerCase().replaceAll( "!request\\s+", "" ) )){
 
-		if (event.getMessage().toLowerCase().startsWith( "!whoami" ))
+					event.respondWith( "Sorry, I can't find "
+							+ event.getMessage().toLowerCase().replaceAll( "!request\\s+", "" )
+							+ ", it is already playing or it is already at the end of the queue." );
+				}
+			}
+		if (event.getMessage().toLowerCase().startsWith( "!whoru" ))
 			event.respondWith( "I'm your friendly music bot. For a list of commands type !help. " +
 					"for my source code visit https://github.com/AlwaysBeCrafting/daCapoBot" );
 

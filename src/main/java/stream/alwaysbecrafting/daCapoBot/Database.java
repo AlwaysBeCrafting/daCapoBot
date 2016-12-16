@@ -169,9 +169,7 @@ class Database {
 
 		List<String> pathsFromDB = new ArrayList<>();
 
-		String sql = "INSERT INTO tracks(title,short_name,path,artist,album) VALUES(?,?,?,?,?)";
-
-			String select = "SELECT path FROM tracks";
+		String select = "SELECT path FROM tracks";
 		try(Statement stmt = connection.createStatement()){
 			ResultSet rs = stmt.executeQuery( select );
 
@@ -197,6 +195,7 @@ class Database {
 		} catch ( SQLException e ) {
 			e.printStackTrace();
 		}
+		String sql = "INSERT INTO tracks(title,short_name,path,artist,album) VALUES(?,?,?,?,?)";
 		try(PreparedStatement statement = connection.prepareStatement( sql )){
 			tracksToInsert.forEach( track -> {
 				try {
@@ -225,7 +224,6 @@ class Database {
 
 	void logChat( String user, String message ) {
 		String sql = "INSERT INTO chat_log(timestamp,user,message) VALUES(?,?,?)";
-
 		try(PreparedStatement statement = connection.prepareStatement( sql );){
 			statement.setLong( 1, currentTimeMillis() );
 			statement.setString( 2, user.toString() );
@@ -237,7 +235,7 @@ class Database {
 	}
 
 	Track getFirst() {
-			String select = "SELECT path FROM tracks ORDER BY id ASC LIMIT 1";
+		String select = "SELECT path FROM tracks ORDER BY id ASC LIMIT 1";
 		try(PreparedStatement statement = connection.prepareStatement( select )){
 			ResultSet rs = statement.executeQuery();
 			String s = rs.getString( "path" );
@@ -255,19 +253,20 @@ class Database {
 		List<Track> trackList = new ArrayList<>();
 
 		//get next track id from current track title
-			String select = "SELECT id FROM tracks WHERE title = ? LIMIT 1";
-			String select2 = "SELECT path FROM tracks WHERE id > ? LIMIT ?";
-		try (PreparedStatement statement2 = connection.prepareStatement( select2 );PreparedStatement statement = connection.prepareStatement( select )){
+		String id = "SELECT id FROM tracks WHERE title = ? LIMIT 1";
+		String path = "SELECT path FROM tracks WHERE id > ? LIMIT ?";
+		try (PreparedStatement getPath = connection.prepareStatement( path );
+		     PreparedStatement getId = connection.prepareStatement( id )){
 
-			statement.setString( 1, currentTrack.title );
+			getId.setString( 1, currentTrack.title );
 
-			ResultSet rs = statement.executeQuery();
+			ResultSet rs = getId.executeQuery();
 
 			if ( rs.next() ) {
 				trackID = rs.getInt( "id" );
-				statement2.setInt( 1, trackID );
-				statement2.setInt( 2, numberToGet);
-				rs = statement2.executeQuery();
+				getPath.setInt( 1, trackID );
+				getPath.setInt( 2, numberToGet);
+				rs = getPath.executeQuery();
 				while(rs.next()){
 				trackList.add( new Track( new File( rs.getString( "path" ))));
 				}
@@ -286,11 +285,11 @@ class Database {
 
 	boolean addToVeto( String user, String short_name ) {
 
-			String select = "SELECT id, short_name FROM tracks WHERE short_name LIKE ?";
-		try(PreparedStatement statement = connection.prepareStatement( select )){
-			statement.setString( 1, "%" + short_name + "%");
+		String select = "SELECT id, short_name FROM tracks WHERE short_name LIKE ?";
+		try(PreparedStatement getLikeShortName = connection.prepareStatement( select )){
+			getLikeShortName.setString( 1, "%" + short_name + "%");
 
-			ResultSet rs = statement.executeQuery( );
+			ResultSet rs = getLikeShortName.executeQuery( );
 			List<String> short_names = new ArrayList<>();
 			List<Integer> track_ids   = new ArrayList<>();
 			while (rs.next()){
@@ -300,26 +299,25 @@ class Database {
 
 			if(short_names.isEmpty() || short_names.size() > 1){
 				System.out.println("short_names was empty or size = " + short_names.size());
-
 				return false;
 			}
 			else{
-				System.out.println("inserting into vetoes");
 				System.out.println(user);
 				System.out.println(track_ids);
-				String select2 = "INSERT INTO vetoes(timestamp,user,track_id) VALUES(?,?,?)";
+				String vetoesSql = "INSERT INTO vetoes(timestamp,user,track_id) VALUES(?,?,?)";
 
-				try(PreparedStatement statement2 = connection.prepareStatement( select2 )){
-					statement2.setLong( 1, System.currentTimeMillis() );
-					statement2.setString( 2, user );
-					statement2.setInt( 3, track_ids.get( 0 ) );
-					statement2.executeUpdate();
+				try(PreparedStatement vetoesInsert = connection.prepareStatement( vetoesSql )){
+					vetoesInsert.setLong( 1, System.currentTimeMillis() );
+					vetoesInsert.setString( 2, user );
+					vetoesInsert.setInt( 3, track_ids.get( 0 ) );
+					vetoesInsert.executeUpdate();
 				} catch ( SQLException e ) {
 					e.printStackTrace();
 				}
 				String query = "SELECT * FROM vetoes";
-				try(PreparedStatement query1 = connection.prepareStatement( query ) ){
-					ResultSet test = query1.executeQuery();
+				try(PreparedStatement getAllRows = connection.prepareStatement( query ) ){
+					ResultSet test = getAllRows.executeQuery();
+						System.out.println("Output vetoes table:");
 					while( test.next()){
 						System.out.println(test.getInt( "id" ) + " " + test.getLong( "timestamp" ) + " " + test.getString( "user" ) + " " + test.getInt( "track_id" ) ) ;
 					}
@@ -334,20 +332,105 @@ class Database {
 			return false;
 	}
 
-	public String getShortName( String title ) {
-
-			String select = "SELECT short_name FROM tracks WHERE title = ? LIMIT 1";
-		try(PreparedStatement statement = connection.prepareStatement( select )){
-			statement.setString( 1, title );
-			ResultSet rs = statement.executeQuery();
-			String s = rs.getString( "short_name" );
-			return s;
+	boolean addRequest(Track currentTrack, String user, String shortName){
+		List<Track> trackList = setTrackList( shortName );
+		if(trackList.size() > 1){
+			System.out.println("too many results to add request");
+			return false;
 		}
-		catch ( SQLException e ){
+		else if( trackList.get( 0 ) != null && trackList.get( 0 ).title.equalsIgnoreCase( currentTrack.title ) ){
+			System.out.println("Currently playing " + currentTrack.title);
+			return false;
+		}
+		else{
+			String insertRequest = "INSERT INTO requests(timestamp, user, track_id) VALUES(?,?,?)";
+			try(PreparedStatement statement = connection.prepareStatement( insertRequest )){
+				statement.setLong( 1, System.currentTimeMillis() );
+				statement.setString( 2, user );
+				statement.setInt( 3, trackList.get( 0 ).id );
+				statement.execute();
+			}
+			catch ( Exception e ){
+				e.printStackTrace();
+			}
+			return true;
+		}
+	}
+
+	List<Track> setTrackList( String shortName){
+		List<Track> tracks = Collections.emptyList();
+		String select = "SELECT * FROM tracks WHERE short_name LIKE ?";
+		try(PreparedStatement statement = connection.prepareStatement( select )){
+			statement.setString( 1, "%" + shortName + "%" );
+			ResultSet rs = statement.executeQuery();
+			tracks = new ArrayList<>();
+			while(rs.next()){
+				Track temp      = new Track( new File( rs.getString("path")));
+				temp.id         = rs.getInt( "id" );
+				temp.title      = rs.getString( "title" );
+				temp.shortName  = rs.getString( "short_name" );
+				temp.artist     = rs.getString( "artist" );
+				temp.album      = rs.getString( "album" );
+				tracks.add( temp );
+			}
+			return tracks;
+		}
+		catch(SQLException e){
 			e.printStackTrace();
 		}
+		return tracks;
+	}
 
-		return "can't find short name";
+
+	public Track getNextRequested( long timestamp ) {
+		String nextRequestSql = "SELECT * FROM requests WHERE timestamp > ? limit 1";
+		try(PreparedStatement requestSql = connection.prepareStatement( nextRequestSql )){
+			requestSql.setLong( 1, timestamp );
+			ResultSet requestSqlResults = requestSql.executeQuery();
+			if( requestSqlResults.isClosed()){
+				return null;
+			}
+			String getTrackData = "SELECT * FROM tracks WHERE id = ?";
+			try(PreparedStatement trackSql = connection.prepareStatement( getTrackData )) {
+				trackSql.setInt( 1, requestSqlResults.getInt( "track_id" ) );
+				ResultSet trackData = trackSql.executeQuery();
+
+				System.out.println(trackData.getString( "path" ));
+				Track temp = new Track( new File( trackData.getString( "path" ) ) );
+				temp.id = trackData.getInt( "id" );
+				temp.timestamp = requestSqlResults.getLong( "timestamp" );
+				temp.title = trackData.getString( "title" );
+				temp.shortName = trackData.getString( "short_name" );
+				temp.artist = trackData.getString( "artist" );
+				temp.album = trackData.getString( "album" );
+				return temp;
+			}
+		}
+		catch(SQLException e){
+			e.printStackTrace();
+		}
+		return null;
 	}
 }
 //------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
