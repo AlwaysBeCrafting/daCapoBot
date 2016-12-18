@@ -369,9 +369,6 @@ class Database {
 			String insertRequest = "INSERT INTO requests(timestamp, user, track_id) VALUES(?,?,?)";
 			try ( PreparedStatement statement = connection.prepareStatement( insertRequest ) ) {
 				statement.setLong( 1, System.currentTimeMillis() );
-				//--------------------------------------------------------------------------
-				System.out.println("Inserted " + System.currentTimeMillis());
-				//--------------------------------------------------------------------------
 				statement.setString( 2, user );
 				statement.setInt( 3, trackList.get( 0 ).id );
 				statement.execute();
@@ -419,7 +416,6 @@ class Database {
 				trackSql.setInt( 1, requestSqlResults.getInt( "track_id" ) );
 				ResultSet trackData = trackSql.executeQuery();
 
-				System.out.println( trackData.getString( "path" ) );
 				Track temp = new Track( new File( trackData.getString( "path" ) ) );
 				temp.id = trackData.getInt( "id" );
 				temp.timestamp = requestSqlResults.getLong( "timestamp" );
@@ -427,9 +423,6 @@ class Database {
 				temp.shortName = trackData.getString( "short_name" );
 				temp.artist = trackData.getString( "artist" );
 				temp.album = trackData.getString( "album" );
-				//--------------------------------------------------------------------------
-				System.out.println("Requested Track " + temp.timestamp);
-				//--------------------------------------------------------------------------
 				return temp;
 			}
 		} catch ( SQLException e ) {

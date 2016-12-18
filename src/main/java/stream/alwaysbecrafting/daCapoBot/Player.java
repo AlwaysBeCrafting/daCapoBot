@@ -48,7 +48,7 @@ class Player {
 		}
 
 		try {
-			PrintWriter writer = new PrintWriter( "/home/mh/Current_Track", "UTF-8" );
+			PrintWriter writer = new PrintWriter( Config.CONFIG.props.getProperty( "live_track_file" ), "UTF-8" );
 			writer.println( currentTrack.title );
 			writer.close();
 		}
@@ -64,11 +64,9 @@ class Player {
 		Track requestedTrack = Database.DB_INSTANCE.getNextRequested( timestamp );
 		if ( requestedTrack != null ) {
 			timestamp = requestedTrack.timestamp;
-			System.out.println("Player timestamp from requested " + timestamp);
 			this.currentTrack = requestedTrack;
 		} else {
 			timestamp = System.currentTimeMillis();
-			System.out.println("Player system timestamp " + timestamp);
 			this.currentTrack = Database.DB_INSTANCE.getAfter( currentTrack, 1 ).get( 0 );
 		}
 		play();
@@ -86,14 +84,6 @@ class Player {
 				.contains( (short_name.replace( "!veto ", "" )) )){
 
 			nextTrack();
-		}
-		if( currentTrack.title
-				.toLowerCase()
-				.replaceAll( "[^a-z0-9]+", "-" )
-				.equalsIgnoreCase( "can't find short name")){
-
-			System.out.println("can't find short name");
-			return false;
 		}
 		return true;
 	}
