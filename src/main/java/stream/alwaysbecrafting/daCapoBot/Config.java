@@ -58,12 +58,12 @@ class Config {
 			System.exit( 0 );
 		}
 		else{
-			try( InputStream input = new FileInputStream( "dacapobot.properties" )){
+			File file = new File( "dacapobot.properties" );
+			try( InputStream input = new FileInputStream( file )){
 				props.load(input);
 				if(!props.stringPropertyNames().containsAll( propertiesList ) ){
-					System.out.println("Missing a property. Please verify your dacapobot.properties is complete. " +
-							"You may delete dacapobot.properties if you need me to recreate it with all the expected" +
-							"fields.");
+					System.err.println("Error: Missing Property in " + file.getCanonicalPath() + "\n\t\tDelete to generate defaults.");
+					System.exit( 0 );
 				}
 			}
 			catch ( IOException io ){
