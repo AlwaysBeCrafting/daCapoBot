@@ -1,4 +1,4 @@
-package stream.alwaysbecrafting.daCapoBot;
+package stream.alwaysbecrafting.dacapobot;
 
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
@@ -8,7 +8,7 @@ import javafx.embed.swing.JFXPanel;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 
-import static stream.alwaysbecrafting.daCapoBot.Database.DB_INSTANCE;
+import static stream.alwaysbecrafting.dacapobot.Database.DB_INSTANCE;
 
 //==============================================================================
 class Player {

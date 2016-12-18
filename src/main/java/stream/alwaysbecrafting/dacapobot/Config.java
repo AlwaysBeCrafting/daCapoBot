@@ -1,4 +1,4 @@
-package stream.alwaysbecrafting.daCapoBot;
+package stream.alwaysbecrafting.dacapobot;
 
 import org.pircbotx.Configuration;
 import org.pircbotx.cap.EnableCapHandler;

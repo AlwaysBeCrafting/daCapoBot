@@ -1,4 +1,4 @@
-package stream.alwaysbecrafting.daCapoBot;
+package stream.alwaysbecrafting.dacapobot;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,7 +31,7 @@ class Database {
 
 	private static String getDBPath() {
 		try {
-			File db = new File( "daCapoBot.db" );
+			File db = new File( "dacapobot.db" );
 			return db.getCanonicalPath();
 		} catch ( IOException e ) {
 			e.printStackTrace();

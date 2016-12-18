@@ -1,8 +1,10 @@
 group 'stream.alwaysbecrafting'
-version '1.0'
+version '0.1'
+
+mainClassName = "stream.alwaysbecrafting.dacapobot.Main"
 
 apply plugin: 'java'
-
+apply plugin: 'application'
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
@@ -12,7 +14,6 @@ repositories {
 
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.11'
-    // https://mvnrepository.com/artifact/com.googlecode.soundlibs/jlayer
     compile 'com.mpatric:mp3agic:0.8.4'
     compile 'org.xerial:sqlite-jdbc:3.8.+'
     compile 'org.pircbotx:pircbotx:2.1'

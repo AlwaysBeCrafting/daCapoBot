@@ -1,4 +1,4 @@
-package stream.alwaysbecrafting.daCapoBot;
+package stream.alwaysbecrafting.dacapobot;
 
 import org.pircbotx.hooks.ListenerAdapter;
 import org.pircbotx.hooks.events.ConnectEvent;
@@ -37,13 +37,13 @@ class BotListener extends ListenerAdapter{
 			}
 		if (event.getMessage().toLowerCase().startsWith( "!whoru" ))
 			event.respondWith( "I'm your friendly music bot. For a list of commands type !help. " +
-					"for my source code visit https://github.com/AlwaysBeCrafting/daCapoBot" );
+					"for my source code visit https://github.com/AlwaysBeCrafting/dacapobot" );
 
 		if (event.getMessage().toLowerCase().startsWith( "!test" ))
 			event.respondWith( "Slippy's not such a screw up after all" );
 
 		if (event.getMessage().toLowerCase().startsWith( "!suggestions" ))
-			event.respondWith( "Feature requests are welcome, please submit to https://github.com/AlwaysBeCrafting/daCapoBot/issues" );
+			event.respondWith( "Feature requests are welcome, please submit to https://github.com/AlwaysBeCrafting/dacapobot/issues" );
 
 	}
 
