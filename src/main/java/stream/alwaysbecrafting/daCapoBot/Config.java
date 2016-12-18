@@ -6,7 +6,6 @@ import org.pircbotx.cap.EnableCapHandler;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
@@ -25,34 +24,34 @@ class Config {
 			,"live_track_file");
 
 
-	Config(){
+	Config() {
 		props = new Properties();
-		if ( !(new File( "dacapobot.properties" ).exists()) ) {
-			try ( OutputStream output = new FileOutputStream( "dacapobot.properties" ) ) {
-				props.setProperty( "music_directory", "$HOME/Music" );
-				props.setProperty( "bot_name", "YOUR_BOT_NAME_HERE" );
-				props.setProperty( "irc_server", "irc.twitch.tv" );
-				props.setProperty( "irc_channel", "#test" );
-				props.setProperty( "oauth", "BIGOATHTOKENHERE" );
-				props.setProperty( "live_track_file", "Put the location where you would like the current track title stored. " );
-				props.store(output, null);
-			} catch ( IOException io ) {
-				io.printStackTrace();
-			}
-			System.exit( 0 );
-		}
-		else{
-			File file = new File( "dacapobot.properties" );
-			try( InputStream input = new FileInputStream( file )){
-				props.load(input);
-				if(!props.stringPropertyNames().containsAll( propertiesList ) ){
-					System.err.println("Error: Missing Property in " + file.getCanonicalPath() + "\n\t\tDelete to generate defaults.");
-					System.exit( 0 );
+		try {
+			File file = new File("dacapobot.properties");
+			if ( !file.exists() ) {
+				try ( OutputStream output = new FileOutputStream( file ) ) {
+					props.setProperty( "music_directory", "$HOME/Music" );
+					props.setProperty( "bot_name", "YOUR_BOT_NAME_HERE" );
+					props.setProperty( "irc_server", "irc.twitch.tv" );
+					props.setProperty( "irc_channel", "#test" );
+					props.setProperty( "oauth", "BIGOAUTHTOKENHERE" );
+					props.setProperty( "live_track_file", "location where the current track title stored." );
+					props.store( output, null );
+				}
+				System.err.println( "Error: Properties file not exist " + file.getCanonicalPath() + "\n\t\tCreating, please edit before next run." );
+				System.exit( 0 );
+			} else {
+				try ( InputStream input = new FileInputStream( file ) ) {
+					props.load( input );
+					if ( !props.stringPropertyNames().containsAll( propertiesList ) ) {
+						System.err.println( "Error: Missing Property in " + file.getCanonicalPath() + "\n\t\tDelete to generate defaults." );
+						System.exit( 0 );
+					}
 				}
 			}
-			catch ( IOException io ){
-				io.printStackTrace();
-			}
+		}
+		catch(Exception e ){
+			e.printStackTrace();
 		}
 	}
 
