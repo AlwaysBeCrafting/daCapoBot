@@ -2,7 +2,7 @@
 *.db*
 
 ## Java
-
+*.properties
 *.class
 *.war
 *.ear
