@@ -15,7 +15,7 @@ class Player {
 	//--------------------------------------------------------------------------
 	private MediaPlayer player;
 	private boolean playerRunning = false;
-	private long timestamp = 0;
+	private long timestamp = System.currentTimeMillis();
 	private Track currentTrack;
 
 	Player(){}
@@ -64,8 +64,11 @@ class Player {
 		Track requestedTrack = Database.DB_INSTANCE.getNextRequested( timestamp );
 		if ( requestedTrack != null ) {
 			timestamp = requestedTrack.timestamp;
+			System.out.println("Player timestamp from requested " + timestamp);
 			this.currentTrack = requestedTrack;
 		} else {
+			timestamp = System.currentTimeMillis();
+			System.out.println("Player system timestamp " + timestamp);
 			this.currentTrack = Database.DB_INSTANCE.getAfter( currentTrack, 1 ).get( 0 );
 		}
 		play();
@@ -95,12 +98,8 @@ class Player {
 		return true;
 	}
 
-	boolean request( String user, String short_name ) {
-		if(!DB_INSTANCE.addRequest(currentTrack, user, short_name.replaceAll( "!request\\s+", "" ))){
-			System.out.println("can't find " + short_name);
-			return false;
-		}
-		return true;
+	String request( String user, String short_name ) {
+		return DB_INSTANCE.addRequest(currentTrack, user, short_name.replaceAll( "!request\\s+", "" ));
 	}
 }
 //------------------------------------------------------------------------------

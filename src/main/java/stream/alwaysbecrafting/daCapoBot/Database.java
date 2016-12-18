@@ -80,7 +80,7 @@ class Database {
 				+ "message     text        COLLATE NOCASE"
 				+ ");";
 
-		try(Statement stmt = connection.createStatement()){
+		try ( Statement stmt = connection.createStatement() ) {
 			// create a new table
 			stmt.execute( sql );
 		} catch ( SQLException e ) {
@@ -100,7 +100,7 @@ class Database {
 				+ "album       text        COLLATE NOCASE  "
 				+ ");                                       ";
 
-		try(Statement stmt = connection.createStatement()){
+		try ( Statement stmt = connection.createStatement() ) {
 			// create a new table
 			stmt.execute( sql );
 		} catch ( SQLException e ) {
@@ -123,7 +123,7 @@ class Database {
 						+ "FOREIGN KEY (track_id) REFERENCES tracks(id)    "
 						+ ");";
 
-		try(Statement stmt = connection.createStatement()){
+		try ( Statement stmt = connection.createStatement() ) {
 			// create a new table
 			stmt.execute( sql );
 		} catch ( SQLException e ) {
@@ -145,7 +145,7 @@ class Database {
 						+ "FOREIGN KEY (track_id) REFERENCES tracks(id)"
 						+ ");";
 
-		try(Statement stmt = connection.createStatement()){
+		try ( Statement stmt = connection.createStatement() ) {
 			// create a new table
 			stmt.execute( sql );
 		} catch ( SQLException e ) {
@@ -170,7 +170,7 @@ class Database {
 		List<String> pathsFromDB = new ArrayList<>();
 
 		String select = "SELECT path FROM tracks";
-		try(Statement stmt = connection.createStatement()){
+		try ( Statement stmt = connection.createStatement() ) {
 			ResultSet rs = stmt.executeQuery( select );
 
 			// loop through the result set
@@ -196,7 +196,7 @@ class Database {
 			e.printStackTrace();
 		}
 		String sql = "INSERT INTO tracks(title,short_name,path,artist,album) VALUES(?,?,?,?,?)";
-		try(PreparedStatement statement = connection.prepareStatement( sql )){
+		try ( PreparedStatement statement = connection.prepareStatement( sql ) ) {
 			tracksToInsert.forEach( track -> {
 				try {
 					statement.setString( 1, track.title );
@@ -224,7 +224,7 @@ class Database {
 
 	void logChat( String user, String message ) {
 		String sql = "INSERT INTO chat_log(timestamp,user,message) VALUES(?,?,?)";
-		try(PreparedStatement statement = connection.prepareStatement( sql );){
+		try ( PreparedStatement statement = connection.prepareStatement( sql ); ) {
 			statement.setLong( 1, currentTimeMillis() );
 			statement.setString( 2, user.toString() );
 			statement.setString( 3, message );
@@ -236,7 +236,7 @@ class Database {
 
 	Track getFirst() {
 		String select = "SELECT path FROM tracks ORDER BY id ASC LIMIT 1";
-		try(PreparedStatement statement = connection.prepareStatement( select )){
+		try ( PreparedStatement statement = connection.prepareStatement( select ) ) {
 			ResultSet rs = statement.executeQuery();
 			String s = rs.getString( "path" );
 
@@ -255,8 +255,8 @@ class Database {
 		//get next track id from current track title
 		String id = "SELECT id FROM tracks WHERE title = ? LIMIT 1";
 		String path = "SELECT path FROM tracks WHERE id > ? LIMIT ?";
-		try (PreparedStatement getPath = connection.prepareStatement( path );
-		     PreparedStatement getId = connection.prepareStatement( id )){
+		try ( PreparedStatement getPath = connection.prepareStatement( path );
+		      PreparedStatement getId = connection.prepareStatement( id ) ) {
 
 			getId.setString( 1, currentTrack.title );
 
@@ -265,19 +265,18 @@ class Database {
 			if ( rs.next() ) {
 				trackID = rs.getInt( "id" );
 				getPath.setInt( 1, trackID );
-				getPath.setInt( 2, numberToGet);
+				getPath.setInt( 2, numberToGet );
 				rs = getPath.executeQuery();
-				while(rs.next()){
-				trackList.add( new Track( new File( rs.getString( "path" ))));
+				while ( rs.next() ) {
+					trackList.add( new Track( new File( rs.getString( "path" ) ) ) );
 				}
 
 			} else {
-				trackList.add( getFirst());
+				trackList.add( getFirst() );
 
 			}
 			return trackList;
-		}
-		catch(Exception e){
+		} catch ( Exception e ) {
 			e.printStackTrace();
 			return null;
 		}
@@ -286,27 +285,26 @@ class Database {
 	boolean addToVeto( String user, String short_name ) {
 
 		String select = "SELECT id, short_name FROM tracks WHERE short_name LIKE ?";
-		try(PreparedStatement getLikeShortName = connection.prepareStatement( select )){
-			getLikeShortName.setString( 1, "%" + short_name + "%");
+		try ( PreparedStatement getLikeShortName = connection.prepareStatement( select ) ) {
+			getLikeShortName.setString( 1, "%" + short_name + "%" );
 
-			ResultSet rs = getLikeShortName.executeQuery( );
+			ResultSet rs = getLikeShortName.executeQuery();
 			List<String> short_names = new ArrayList<>();
-			List<Integer> track_ids   = new ArrayList<>();
-			while (rs.next()){
+			List<Integer> track_ids = new ArrayList<>();
+			while ( rs.next() ) {
 				short_names.add( rs.getString( "short_name" ) );
-				track_ids.add( rs.getInt( "id") );
+				track_ids.add( rs.getInt( "id" ) );
 			}
 
-			if(short_names.isEmpty() || short_names.size() > 1){
-				System.out.println("short_names was empty or size = " + short_names.size());
+			if ( short_names.isEmpty() || short_names.size() > 1 ) {
+				System.out.println( "short_names was empty or size = " + short_names.size() );
 				return false;
-			}
-			else{
-				System.out.println(user);
-				System.out.println(track_ids);
+			} else {
+				System.out.println( user );
+				System.out.println( track_ids );
 				String vetoesSql = "INSERT INTO vetoes(timestamp,user,track_id) VALUES(?,?,?)";
 
-				try(PreparedStatement vetoesInsert = connection.prepareStatement( vetoesSql )){
+				try ( PreparedStatement vetoesInsert = connection.prepareStatement( vetoesSql ) ) {
 					vetoesInsert.setLong( 1, System.currentTimeMillis() );
 					vetoesInsert.setString( 2, user );
 					vetoesInsert.setInt( 3, track_ids.get( 0 ) );
@@ -315,67 +313,93 @@ class Database {
 					e.printStackTrace();
 				}
 				String query = "SELECT * FROM vetoes";
-				try(PreparedStatement getAllRows = connection.prepareStatement( query ) ){
+				try ( PreparedStatement getAllRows = connection.prepareStatement( query ) ) {
 					ResultSet test = getAllRows.executeQuery();
-						System.out.println("Output vetoes table:");
-					while( test.next()){
-						System.out.println(test.getInt( "id" ) + " " + test.getLong( "timestamp" ) + " " + test.getString( "user" ) + " " + test.getInt( "track_id" ) ) ;
+					System.out.println( "Output vetoes table:" );
+					while ( test.next() ) {
+						System.out.println( test.getInt( "id" ) + " " + test.getLong( "timestamp" ) + " " + test.getString( "user" ) + " " + test.getInt( "track_id" ) );
 					}
 				}
 				return true;
 
 			}
-		}
-		catch(Exception e){
+		} catch ( Exception e ) {
 			e.printStackTrace();
 		}
-			return false;
+		return false;
 	}
 
-	boolean addRequest(Track currentTrack, String user, String shortName){
+	Track getFinalFromRequests() {
+		String select = "SELECT * FROM requests ORDER BY id DESC LIMIT 1";
+		try ( PreparedStatement statement = connection.prepareStatement( select ) ) {
+			ResultSet rs1 = statement.executeQuery();
+
+
+			String select2 = "SELECT * FROM tracks WHERE id LIKE ?";
+			try ( PreparedStatement statement2 = connection.prepareStatement( select2 ) ) {
+				statement2.setInt( 1, rs1.getInt( "track_id" ) );
+				ResultSet rs2 = statement2.executeQuery();
+				Track temp = new Track( new File( rs2.getString( "path" ) ) );
+				temp.id = rs2.getInt( "id" );
+				temp.title = rs2.getString( "title" );
+				temp.shortName = rs2.getString( "short_name" );
+				temp.artist = rs2.getString( "artist" );
+				temp.album = rs2.getString( "album" );
+				return temp;
+
+			}
+		} catch ( SQLException e ) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	String addRequest( Track currentTrack, String user, String shortName ) {
 		List<Track> trackList = setTrackList( shortName );
-		if(trackList.size() > 1){
-			System.out.println("too many results to add request");
-			return false;
+		Track lastInRequest = getFinalFromRequests();
+		if(trackList.isEmpty()){
+			return "Sorry, I couldn't find any tracks containing " + shortName;
 		}
-		else if( trackList.get( 0 ) != null && trackList.get( 0 ).title.equalsIgnoreCase( currentTrack.title ) ){
-			System.out.println("Currently playing " + currentTrack.title);
-			return false;
-		}
-		else{
+		else if ( trackList.size() > 1 ) {
+			return "I found " + trackList.size() + " results matching " + shortName
+					+ ". Could you be more specific?";
+		} else if ( trackList.get( 0).title.equalsIgnoreCase( lastInRequest.title )) {
+			return trackList.get( 0 ).title + " is the last song in the request list. Please choose a different track.";
+		} else {
 			String insertRequest = "INSERT INTO requests(timestamp, user, track_id) VALUES(?,?,?)";
-			try(PreparedStatement statement = connection.prepareStatement( insertRequest )){
+			try ( PreparedStatement statement = connection.prepareStatement( insertRequest ) ) {
 				statement.setLong( 1, System.currentTimeMillis() );
+				//--------------------------------------------------------------------------
+				System.out.println("Inserted " + System.currentTimeMillis());
+				//--------------------------------------------------------------------------
 				statement.setString( 2, user );
 				statement.setInt( 3, trackList.get( 0 ).id );
 				statement.execute();
-			}
-			catch ( Exception e ){
+			} catch ( Exception e ) {
 				e.printStackTrace();
 			}
-			return true;
+			return trackList.get( 0 ).title + " added to the queue.";
 		}
 	}
 
-	List<Track> setTrackList( String shortName){
+	List<Track> setTrackList( String shortName ) {
 		List<Track> tracks = Collections.emptyList();
 		String select = "SELECT * FROM tracks WHERE short_name LIKE ?";
-		try(PreparedStatement statement = connection.prepareStatement( select )){
+		try ( PreparedStatement statement = connection.prepareStatement( select ) ) {
 			statement.setString( 1, "%" + shortName + "%" );
 			ResultSet rs = statement.executeQuery();
 			tracks = new ArrayList<>();
-			while(rs.next()){
-				Track temp      = new Track( new File( rs.getString("path")));
-				temp.id         = rs.getInt( "id" );
-				temp.title      = rs.getString( "title" );
-				temp.shortName  = rs.getString( "short_name" );
-				temp.artist     = rs.getString( "artist" );
-				temp.album      = rs.getString( "album" );
+			while ( rs.next() ) {
+				Track temp = new Track( new File( rs.getString( "path" ) ) );
+				temp.id = rs.getInt( "id" );
+				temp.title = rs.getString( "title" );
+				temp.shortName = rs.getString( "short_name" );
+				temp.artist = rs.getString( "artist" );
+				temp.album = rs.getString( "album" );
 				tracks.add( temp );
 			}
 			return tracks;
-		}
-		catch(SQLException e){
+		} catch ( SQLException e ) {
 			e.printStackTrace();
 		}
 		return tracks;
@@ -384,18 +408,18 @@ class Database {
 
 	public Track getNextRequested( long timestamp ) {
 		String nextRequestSql = "SELECT * FROM requests WHERE timestamp > ? limit 1";
-		try(PreparedStatement requestSql = connection.prepareStatement( nextRequestSql )){
+		try ( PreparedStatement requestSql = connection.prepareStatement( nextRequestSql ) ) {
 			requestSql.setLong( 1, timestamp );
 			ResultSet requestSqlResults = requestSql.executeQuery();
-			if( requestSqlResults.isClosed()){
+			if ( requestSqlResults.isClosed() ) {
 				return null;
 			}
 			String getTrackData = "SELECT * FROM tracks WHERE id = ?";
-			try(PreparedStatement trackSql = connection.prepareStatement( getTrackData )) {
+			try ( PreparedStatement trackSql = connection.prepareStatement( getTrackData ) ) {
 				trackSql.setInt( 1, requestSqlResults.getInt( "track_id" ) );
 				ResultSet trackData = trackSql.executeQuery();
 
-				System.out.println(trackData.getString( "path" ));
+				System.out.println( trackData.getString( "path" ) );
 				Track temp = new Track( new File( trackData.getString( "path" ) ) );
 				temp.id = trackData.getInt( "id" );
 				temp.timestamp = requestSqlResults.getLong( "timestamp" );
@@ -403,10 +427,12 @@ class Database {
 				temp.shortName = trackData.getString( "short_name" );
 				temp.artist = trackData.getString( "artist" );
 				temp.album = trackData.getString( "album" );
+				//--------------------------------------------------------------------------
+				System.out.println("Requested Track " + temp.timestamp);
+				//--------------------------------------------------------------------------
 				return temp;
 			}
-		}
-		catch(SQLException e){
+		} catch ( SQLException e ) {
 			e.printStackTrace();
 		}
 		return null;

@@ -31,13 +31,9 @@ class BotListener extends ListenerAdapter{
 
 		if (event.getMessage().toLowerCase().startsWith( "!request" ))
 			if(event.getUser().getRealName() != null) {
-				if (!PLAYER.request( event.getUser().getRealName()
-						, event.getMessage().toLowerCase().replaceAll( "!request\\s+", "" ) )){
+				event.respondWith(PLAYER.request( event.getUser().getRealName()
+						, event.getMessage().toLowerCase().replaceAll( "!request\\s+", "" ) ));
 
-					event.respondWith( "Sorry, I can't find "
-							+ event.getMessage().toLowerCase().replaceAll( "!request\\s+", "" )
-							+ ", it is already playing or it is already at the end of the queue." );
-				}
 			}
 		if (event.getMessage().toLowerCase().startsWith( "!whoru" ))
 			event.respondWith( "I'm your friendly music bot. For a list of commands type !help. " +
