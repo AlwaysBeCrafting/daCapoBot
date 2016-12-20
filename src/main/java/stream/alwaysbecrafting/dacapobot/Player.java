@@ -68,7 +68,7 @@ class Player {
 		} else {
 			timestamp = System.currentTimeMillis();
 
-			this.currentTrack = Database.DB_INSTANCE.getAfter( currentTrack, 1 ).get( 0 );
+			this.currentTrack = Database.DB_INSTANCE.getRandomTrack();
 		}
 		play();
 	}

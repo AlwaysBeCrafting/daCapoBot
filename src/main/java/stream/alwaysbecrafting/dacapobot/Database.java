@@ -333,7 +333,7 @@ class Database {
 		String select = "SELECT * FROM requests ORDER BY id DESC LIMIT 1";
 		try ( PreparedStatement statement = connection.prepareStatement( select ) ) {
 			ResultSet rs1 = statement.executeQuery();
-			if(rs1.isClosed()){
+			if ( rs1.isClosed() ) {
 				return null;
 			}
 			String select2 = "SELECT * FROM tracks WHERE id LIKE ?";
@@ -367,7 +367,7 @@ class Database {
 					+ ". Could you be more specific?";
 		}
 		if ( lastInRequest != null && matchingTracks.get( 0 ).title.equalsIgnoreCase( lastInRequest.title ) ) {
-				return matchingTracks.get( 0 ).title + " is the last song in the request list. Please choose a different track.";
+			return matchingTracks.get( 0 ).title + " is the last song in the request list. Please choose a different track.";
 		} else {
 			String insertRequest = "INSERT INTO requests(timestamp, user, track_id) VALUES(?,?,?)";
 			try ( PreparedStatement statement = connection.prepareStatement( insertRequest ) ) {
@@ -385,7 +385,7 @@ class Database {
 	List<Track> getMatchingTracks( String shortName ) {
 		List<Track> tracks = new ArrayList<>();
 		try ( PreparedStatement statement = connection.prepareStatement( "SELECT * FROM tracks WHERE short_name LIKE ?"
-) ) {
+		) ) {
 			statement.setString( 1, "%" + shortName + "%" );
 			ResultSet rs = statement.executeQuery();
 			while ( rs.next() ) {
@@ -431,13 +431,29 @@ class Database {
 		}
 		return null;
 	}
-}
+
 //------------------------------------------------------------------------------
 
+	Track getRandomTrack() {
+		Track track = null;
+		String sql = "SELECT * FROM tracks WHERE id IN (SELECT id FROM tracks ORDER BY RANDOM() LIMIT 1)";
+		try ( PreparedStatement statement = connection.prepareStatement( sql ) ) {
+			ResultSet rs = statement.executeQuery();
 
+			track = new Track( new File( rs.getString( "path" ) ) );
+			track.id = rs.getInt( "id" );
+			track.title = rs.getString( "title" );
+			track.shortName = rs.getString( "short_name" );
+			track.artist = rs.getString( "artist" );
+			track.album = rs.getString( "album" );
+			return track;
+		} catch ( Exception e ) {
+			e.printStackTrace();
+		}
+		return track;
+	}
 
-
-
+}
 
 
 

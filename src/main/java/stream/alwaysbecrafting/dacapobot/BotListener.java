@@ -39,7 +39,7 @@ class BotListener extends ListenerAdapter{
 
 					event.respondWith( "Sorry, I can't find "
 							+ vetoMatcher.group(1)
-							+ ". Could you be more specific?" );
+							+ ". Could you be specific?" );
 				}
 			}
 		}
