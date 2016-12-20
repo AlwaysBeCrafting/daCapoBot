@@ -1,10 +1,10 @@
 group 'stream.alwaysbecrafting'
 version '0.1'
 
-mainClassName = "stream.alwaysbecrafting.dacapobot.Main"
 
 apply plugin: 'java'
 apply plugin: 'application'
+mainClassName = "stream.alwaysbecrafting.dacapobot.Main"
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 

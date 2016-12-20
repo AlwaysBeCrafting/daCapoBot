@@ -22,7 +22,7 @@ class Player {
 
 	void setQueue() {
 		this.currentTrack = DB_INSTANCE.getFirst();
-
+		System.out.println("queue " + this.currentTrack);
 		initializePlayer();
 
 	}
@@ -67,6 +67,7 @@ class Player {
 			this.currentTrack = requestedTrack;
 		} else {
 			timestamp = System.currentTimeMillis();
+
 			this.currentTrack = Database.DB_INSTANCE.getAfter( currentTrack, 1 ).get( 0 );
 		}
 		play();
@@ -74,7 +75,7 @@ class Player {
 
 
 	boolean veto( String user, String short_name ) {
-		if(!DB_INSTANCE.addToVeto(user, short_name.replaceAll( "!veto\\s+", "" ))){
+		if(!DB_INSTANCE.addToVeto(user, short_name)){
 
 			return false;
 		}
@@ -89,7 +90,7 @@ class Player {
 	}
 
 	String request( String user, String short_name ) {
-		return DB_INSTANCE.addRequest(currentTrack, user, short_name.replaceAll( "!request\\s+", "" ));
+		return DB_INSTANCE.addRequest(user, short_name);
 	}
 }
 //------------------------------------------------------------------------------

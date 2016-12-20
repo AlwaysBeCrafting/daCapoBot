@@ -333,8 +333,9 @@ class Database {
 		String select = "SELECT * FROM requests ORDER BY id DESC LIMIT 1";
 		try ( PreparedStatement statement = connection.prepareStatement( select ) ) {
 			ResultSet rs1 = statement.executeQuery();
-
-
+			if(rs1.isClosed()){
+				return null;
+			}
 			String select2 = "SELECT * FROM tracks WHERE id LIKE ?";
 			try ( PreparedStatement statement2 = connection.prepareStatement( select2 ) ) {
 				statement2.setInt( 1, rs1.getInt( "track_id" ) );
@@ -354,38 +355,39 @@ class Database {
 		return null;
 	}
 
-	String addRequest( Track currentTrack, String user, String shortName ) {
-		List<Track> trackList = setTrackList( shortName );
+	String addRequest( String user, String shortName ) {
+		List<Track> matchingTracks = getMatchingTracks( shortName );
 		Track lastInRequest = getFinalFromRequests();
-		if(trackList.isEmpty()){
+
+		if ( matchingTracks.isEmpty() ) {
 			return "Sorry, I couldn't find any tracks containing " + shortName;
 		}
-		else if ( trackList.size() > 1 ) {
-			return "I found " + trackList.size() + " results matching " + shortName
+		if ( matchingTracks.size() > 1 ) {
+			return "I found " + matchingTracks.size() + " results matching " + shortName
 					+ ". Could you be more specific?";
-		} else if ( trackList.get( 0).title.equalsIgnoreCase( lastInRequest.title )) {
-			return trackList.get( 0 ).title + " is the last song in the request list. Please choose a different track.";
+		}
+		if ( lastInRequest != null && matchingTracks.get( 0 ).title.equalsIgnoreCase( lastInRequest.title ) ) {
+				return matchingTracks.get( 0 ).title + " is the last song in the request list. Please choose a different track.";
 		} else {
 			String insertRequest = "INSERT INTO requests(timestamp, user, track_id) VALUES(?,?,?)";
 			try ( PreparedStatement statement = connection.prepareStatement( insertRequest ) ) {
 				statement.setLong( 1, System.currentTimeMillis() );
 				statement.setString( 2, user );
-				statement.setInt( 3, trackList.get( 0 ).id );
+				statement.setInt( 3, matchingTracks.get( 0 ).id );
 				statement.execute();
 			} catch ( Exception e ) {
 				e.printStackTrace();
 			}
-			return trackList.get( 0 ).title + " added to the queue.";
+			return matchingTracks.get( 0 ).title + " added to the queue.";
 		}
 	}
 
-	List<Track> setTrackList( String shortName ) {
-		List<Track> tracks = Collections.emptyList();
-		String select = "SELECT * FROM tracks WHERE short_name LIKE ?";
-		try ( PreparedStatement statement = connection.prepareStatement( select ) ) {
+	List<Track> getMatchingTracks( String shortName ) {
+		List<Track> tracks = new ArrayList<>();
+		try ( PreparedStatement statement = connection.prepareStatement( "SELECT * FROM tracks WHERE short_name LIKE ?"
+) ) {
 			statement.setString( 1, "%" + shortName + "%" );
 			ResultSet rs = statement.executeQuery();
-			tracks = new ArrayList<>();
 			while ( rs.next() ) {
 				Track temp = new Track( new File( rs.getString( "path" ) ) );
 				temp.id = rs.getInt( "id" );
@@ -395,7 +397,6 @@ class Database {
 				temp.album = rs.getString( "album" );
 				tracks.add( temp );
 			}
-			return tracks;
 		} catch ( SQLException e ) {
 			e.printStackTrace();
 		}
