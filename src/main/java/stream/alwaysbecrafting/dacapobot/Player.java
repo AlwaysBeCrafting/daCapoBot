@@ -21,7 +21,7 @@ class Player {
 	Player(){}
 
 	void setQueue() {
-		this.currentTrack = DB_INSTANCE.getFirst();
+		this.currentTrack = DB_INSTANCE.getRandomTrack();
 		System.out.println("queue " + this.currentTrack);
 		initializePlayer();
 
