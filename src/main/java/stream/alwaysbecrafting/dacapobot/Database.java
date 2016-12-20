@@ -200,7 +200,7 @@ class Database {
 			tracksToInsert.forEach( track -> {
 				try {
 					statement.setString( 1, track.title );
-					statement.setString( 2, track.title.toLowerCase().replaceAll( "[^a-z0-9]+", "-" ) );
+					statement.setString( 2, track.title.toLowerCase().replaceAll( "[^a-z0-9]+", "%" ) );
 					statement.setString( 3, track.file.getCanonicalPath() );
 					statement.setString( 4, track.artist );
 					statement.setString( 5, track.album );
