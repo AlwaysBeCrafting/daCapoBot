@@ -67,27 +67,27 @@ class Player {
 			this.currentTrack = requestedTrack;
 		} else {
 			timestamp = System.currentTimeMillis();
-
 			this.currentTrack = Database.DB_INSTANCE.getRandomTrack();
 		}
 		play();
 	}
 
 
-	boolean veto( String user, String short_name ) {
-		if(!DB_INSTANCE.addToVeto(user, short_name)){
-
-			return false;
-		}
+	String veto( String user, String short_name ) {
+		String veto;
 		if( currentTrack.title
 				.toLowerCase()
-				.replaceAll( "[^a-z0-9]+", "-" )
-				.contains( (short_name.replace( "!veto ", "" )) )){
-
+				.replaceAll( "[^a-z0-9]+", "%" )
+				.contains( (short_name.replace( "[^a-z0-9]+", "%" )) )){
+			veto = DB_INSTANCE.addVeto(user, currentTrack.shortName);
 			nextTrack();
 		}
-		return true;
-	}
+		else{
+			veto = DB_INSTANCE.addVeto(user, short_name);
+		}
+			return veto;
+		}
+
 
 	String request( String user, String short_name ) {
 		return DB_INSTANCE.addRequest(user, short_name);

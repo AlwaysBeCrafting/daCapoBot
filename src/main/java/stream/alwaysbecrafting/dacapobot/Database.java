@@ -282,53 +282,6 @@ class Database {
 		}
 	}
 
-	boolean addToVeto( String user, String short_name ) {
-
-		String select = "SELECT id, short_name FROM tracks WHERE short_name LIKE ?";
-		try ( PreparedStatement getLikeShortName = connection.prepareStatement( select ) ) {
-			getLikeShortName.setString( 1, "%" + short_name + "%" );
-
-			ResultSet rs = getLikeShortName.executeQuery();
-			List<String> short_names = new ArrayList<>();
-			List<Integer> track_ids = new ArrayList<>();
-			while ( rs.next() ) {
-				short_names.add( rs.getString( "short_name" ) );
-				track_ids.add( rs.getInt( "id" ) );
-			}
-
-			if ( short_names.isEmpty() || short_names.size() > 1 ) {
-				System.out.println( "short_names was empty or size = " + short_names.size() );
-				return false;
-			} else {
-				System.out.println( user );
-				System.out.println( track_ids );
-				String vetoesSql = "INSERT INTO vetoes(timestamp,user,track_id) VALUES(?,?,?)";
-
-				try ( PreparedStatement vetoesInsert = connection.prepareStatement( vetoesSql ) ) {
-					vetoesInsert.setLong( 1, System.currentTimeMillis() );
-					vetoesInsert.setString( 2, user );
-					vetoesInsert.setInt( 3, track_ids.get( 0 ) );
-					vetoesInsert.executeUpdate();
-				} catch ( SQLException e ) {
-					e.printStackTrace();
-				}
-				String query = "SELECT * FROM vetoes";
-				try ( PreparedStatement getAllRows = connection.prepareStatement( query ) ) {
-					ResultSet test = getAllRows.executeQuery();
-					System.out.println( "Output vetoes table:" );
-					while ( test.next() ) {
-						System.out.println( test.getInt( "id" ) + " " + test.getLong( "timestamp" ) + " " + test.getString( "user" ) + " " + test.getInt( "track_id" ) );
-					}
-				}
-				return true;
-
-			}
-		} catch ( Exception e ) {
-			e.printStackTrace();
-		}
-		return false;
-	}
-
 	Track getFinalFromRequests() {
 		String select = "SELECT * FROM requests ORDER BY id DESC LIMIT 1";
 		try ( PreparedStatement statement = connection.prepareStatement( select ) ) {
@@ -360,11 +313,15 @@ class Database {
 		Track lastInRequest = getFinalFromRequests();
 
 		if ( matchingTracks.isEmpty() ) {
-			return "Sorry, I couldn't find any tracks containing " + shortName;
+			return "Private: Sorry, I couldn't find any tracks containing " + shortName;
 		}
 		if ( matchingTracks.size() > 1 ) {
-			return "I found " + matchingTracks.size() + " results matching " + shortName
-					+ ". Could you be more specific?";
+			String titles = "";
+			for ( Track track : matchingTracks
+					) {
+				titles = titles + ", " + track.title;
+			}
+			return "Private: " + "I found: " + titles.substring( 0, Math.min(titles.length(), 41) );
 		}
 		if ( lastInRequest != null && matchingTracks.get( 0 ).title.equalsIgnoreCase( lastInRequest.title ) ) {
 			return matchingTracks.get( 0 ).title + " is the last song in the request list. Please choose a different track.";
@@ -378,7 +335,35 @@ class Database {
 			} catch ( Exception e ) {
 				e.printStackTrace();
 			}
-			return matchingTracks.get( 0 ).title + " added to the queue.";
+			return "Public: " + matchingTracks.get( 0 ).title + " added to the queue.";
+		}
+	}
+
+	String addVeto( String user, String shortName ) {
+		List<Track> matchingTracks = getMatchingTracks( shortName );
+
+		if ( matchingTracks.isEmpty() ) {
+			return "Private: Sorry, I couldn't find any tracks containing " + shortName;
+		}
+		if ( matchingTracks.size() > 1 ) {
+			String titles = "";
+			for ( Track track : matchingTracks
+					) {
+				titles = titles + ", " + track.title;
+			}
+			return "Private: " + "I found: " + titles.substring( 0, Math.min(titles.length(), 41) );
+		}
+		else {
+			String insertRequest = "INSERT INTO vetoes(timestamp, user, track_id) VALUES(?,?,?)";
+			try ( PreparedStatement statement = connection.prepareStatement( insertRequest ) ) {
+				statement.setLong( 1, System.currentTimeMillis() );
+				statement.setString( 2, user );
+				statement.setInt( 3, matchingTracks.get( 0 ).id );
+				statement.execute();
+			} catch ( Exception e ) {
+				e.printStackTrace();
+			}
+			return "Public: " + matchingTracks.get( 0 ).title + " vetoed, thank you.";
 		}
 	}
 
