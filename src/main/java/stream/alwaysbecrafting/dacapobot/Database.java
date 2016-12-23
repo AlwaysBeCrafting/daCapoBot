@@ -305,7 +305,7 @@ class Database {
 		return null;
 	}
 
-	String addRequest( String user, String request ) {
+	String addRequest( String user, final String request ) {
 		List<Track> matchingTracks = getMatchingTracks( request );
 		matchingTracks.forEach( Track::allToConsole );
 		Track lastInRequest = getFinalFromRequests();
@@ -316,7 +316,7 @@ class Database {
 		if ( matchingTracks.size() > 1 ) {
 			String response = "";
 			for ( int i = 0; i < Math.min( matchingTracks.size(), 3 ); i++ ) {
-				if ( response == "" ) {
+				if ( "".equals( response ) ) {
 					response = response + matchingTracks.get( i ).title;
 				} else {
 					response = response + " ❙ " + matchingTracks.get( i ).title;
@@ -343,7 +343,7 @@ class Database {
 		}
 	}
 
-	String addVeto( String user, String request ) {
+	String addVeto( String user, final String request ) {
 		List<Track> matchingTracks = getMatchingTracks( request );
 
 		if ( matchingTracks.isEmpty() ) {
@@ -352,7 +352,7 @@ class Database {
 		if ( matchingTracks.size() > 1 ) {
 			String response = "";
 			for ( int i = 0; i < Math.min( matchingTracks.size(), 3 ); i++ ) {
-				if ( response == "" ) {
+				if ( "".equals( response )) {
 					response = response + matchingTracks.get( i ).title;
 				} else {
 					response = response + " ❙ " + matchingTracks.get( i ).title;

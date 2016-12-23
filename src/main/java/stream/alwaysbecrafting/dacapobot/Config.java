@@ -8,6 +8,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
@@ -65,7 +66,7 @@ class Config {
 				.setOnJoinWhoEnabled(false) //Twitch doesn't support WHO command
 				.setCapEnabled(true)
 				.addCapHandler(new EnableCapHandler("twitch.tv/membership")) //Twitch by default doesn't send JOIN, PART, and NAMES unless you request it, see https://github.com/justintv/Twitch-API/blob/master/IRC.md#membership
-
+				.setEncoding( StandardCharsets.UTF_8 )
 				.addServer( props.getProperty( "irc_server" )) //Join the network
 				.setName( props.getProperty( "bot_name" ) ) //Set the nick of the bot.
 				.setServerPassword( props.getProperty( "oauth" )) //Your oauth password from http://twitchapps.com/tmi
