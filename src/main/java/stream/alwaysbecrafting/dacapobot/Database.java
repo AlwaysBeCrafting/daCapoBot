@@ -94,7 +94,6 @@ class Database {
 		String sql = "CREATE TABLE IF NOT EXISTS tracks ("
 				+ "id          integer     PRIMARY KEY    ,"
 				+ "title       text        COLLATE NOCASE ,"
-				+ "short_name  text        COLLATE NOCASE ,"
 				+ "path        text        NOT NULL       ,"
 				+ "artist      text        COLLATE NOCASE ,"
 				+ "album       text        COLLATE NOCASE  "
@@ -195,15 +194,14 @@ class Database {
 		} catch ( SQLException e ) {
 			e.printStackTrace();
 		}
-		String sql = "INSERT INTO tracks(title,short_name,path,artist,album) VALUES(?,?,?,?,?)";
+		String sql = "INSERT INTO tracks(title,path,artist,album) VALUES(?,?,?,?)";
 		try ( PreparedStatement statement = connection.prepareStatement( sql ) ) {
 			tracksToInsert.forEach( track -> {
 				try {
 					statement.setString( 1, track.title );
-					statement.setString( 2, track.title.toLowerCase().replaceAll( "[^a-z0-9]+", "%" ) );
-					statement.setString( 3, track.file.getCanonicalPath() );
-					statement.setString( 4, track.artist );
-					statement.setString( 5, track.album );
+					statement.setString( 2, track.file.getCanonicalPath() );
+					statement.setString( 3, track.artist );
+					statement.setString( 4, track.album );
 					statement.executeUpdate();
 				} catch ( Exception e ) {
 					e.printStackTrace();
@@ -296,7 +294,6 @@ class Database {
 				Track temp = new Track( new File( rs2.getString( "path" ) ) );
 				temp.id = rs2.getInt( "id" );
 				temp.title = rs2.getString( "title" );
-				temp.shortName = rs2.getString( "short_name" );
 				temp.artist = rs2.getString( "artist" );
 				temp.album = rs2.getString( "album" );
 				return temp;
@@ -310,6 +307,7 @@ class Database {
 
 	String addRequest( String user, String request ) {
 		List<Track> matchingTracks = getMatchingTracks( request );
+		matchingTracks.forEach( Track::allToConsole );
 		Track lastInRequest = getFinalFromRequests();
 
 		if ( matchingTracks.isEmpty() ) {
@@ -380,9 +378,10 @@ class Database {
 
 	List<Track> getMatchingTracks( String request ) {
 		List<Track> tracks = new ArrayList<>();
-		try ( PreparedStatement statement = connection.prepareStatement( "SELECT * FROM tracks WHERE short_name LIKE ?"
-		) ) {
-			statement.setString( 1, "%" + request + "%" );
+		String formattedRequest = request.replaceAll( "[\\W_]+", "%" );
+		try ( PreparedStatement statement = connection.prepareStatement(
+				"SELECT * FROM tracks WHERE title LIKE ?") ) {
+			statement.setString( 1, "%" + formattedRequest + "%" );
 			ResultSet rs = statement.executeQuery();
 			while ( rs.next() ) {
 				Track temp = new Track( new File( rs.getString( "path" ) ) );
@@ -391,10 +390,10 @@ class Database {
 				}
 				temp.id = rs.getInt( "id" );
 				temp.title = rs.getString( "title" );
-				temp.shortName = rs.getString( "short_name" );
 				temp.artist = rs.getString( "artist" );
 				temp.album = rs.getString( "album" );
 				tracks.add( temp );
+				temp.allToConsole();
 			}
 		} catch ( SQLException e ) {
 			e.printStackTrace();
@@ -419,7 +418,6 @@ class Database {
 				temp.id = trackData.getInt( "id" );
 				temp.timestamp = requestSqlResults.getLong( "timestamp" );
 				temp.title = trackData.getString( "title" );
-				temp.shortName = trackData.getString( "short_name" );
 				temp.artist = trackData.getString( "artist" );
 				temp.album = trackData.getString( "album" );
 				return temp;
@@ -440,7 +438,6 @@ class Database {
 			track = new Track( new File( rs.getString( "path" ) ) );
 			track.id = rs.getInt( "id" );
 			track.title = rs.getString( "title" );
-			track.shortName = rs.getString( "short_name" );
 			track.artist = rs.getString( "artist" );
 			track.album = rs.getString( "album" );
 			return track;

@@ -77,7 +77,7 @@ class Player {
 				.toLowerCase()
 				.replaceAll( "[^a-z0-9]+", "%" )
 				.contains( ( request.replaceAll( "[^a-z0-9]+", "%" ) ) ) ) {
-			veto = DB_INSTANCE.addVeto( user, currentTrack.shortName );
+			veto = DB_INSTANCE.addVeto( user, currentTrack.title );
 			nextTrack();
 		} else {
 			veto = DB_INSTANCE.addVeto( user, ( request ) );

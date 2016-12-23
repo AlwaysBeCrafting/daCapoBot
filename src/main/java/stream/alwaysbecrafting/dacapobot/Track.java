@@ -13,7 +13,6 @@ class Track {
 	int id;
 	long timestamp;
 	String title;
-	String shortName;
 	File file;
 	String artist;
 	String album;
@@ -75,10 +74,20 @@ class Track {
 	}
 
 	public boolean exists() {
-		if(this.file.exists()){
+		if ( this.file.exists() ) {
 			return true;
-		}else
+		} else
 			return false;
+	}
+
+	public void allToConsole() {
+		System.out.println( this.id );
+		System.out.println( this.timestamp );
+		System.out.println( this.title );
+		System.out.println( this.file );
+		System.out.println( this.artist );
+		System.out.println( this.album );
+
 	}
 }
 
