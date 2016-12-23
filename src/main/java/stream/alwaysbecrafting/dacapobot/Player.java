@@ -78,19 +78,19 @@ class Player {
 		if( currentTrack.title
 				.toLowerCase()
 				.replaceAll( "[^a-z0-9]+", "%" )
-				.contains( (short_name.replace( "[^a-z0-9]+", "%" )) )){
+				.contains( (short_name.replaceAll( "[^a-z0-9]+", "%" )) )){
 			veto = DB_INSTANCE.addVeto(user, currentTrack.shortName);
 			nextTrack();
 		}
 		else{
-			veto = DB_INSTANCE.addVeto(user, short_name);
+			veto = DB_INSTANCE.addVeto(user, (short_name.replaceAll( "[^a-z0-9]+", "%" )));
 		}
 			return veto;
 		}
 
 
 	String request( String user, String short_name ) {
-		return DB_INSTANCE.addRequest(user, short_name);
+		return DB_INSTANCE.addRequest(user, (short_name.replaceAll( "[^a-z0-9]+", "%" )));
 	}
 }
 //------------------------------------------------------------------------------

@@ -316,12 +316,19 @@ class Database {
 			return "Private: Sorry, I couldn't find any tracks containing " + shortName;
 		}
 		if ( matchingTracks.size() > 1 ) {
-			String titles = "";
-			for ( Track track : matchingTracks
-					) {
-				titles = titles + ", " + track.title;
+			String response = "";
+			for ( int i = 0; i < Math.min( matchingTracks.size(), 3 ); i++ ) {
+				if(response == "") {
+					response = response + matchingTracks.get( i ).title;
+				}
+				else{
+					response = response + " ❙ " + matchingTracks.get( i ).title;
+				}
 			}
-			return "Private: " + "I found: " + titles.substring( 0, Math.min(titles.length(), 41) );
+			if(matchingTracks.size() > 3){
+				response = response + " ❙ +" + (matchingTracks.size() - 3) + " more";
+			}
+			return "Private: " + response;
 		}
 		if ( lastInRequest != null && matchingTracks.get( 0 ).title.equalsIgnoreCase( lastInRequest.title ) ) {
 			return matchingTracks.get( 0 ).title + " is the last song in the request list. Please choose a different track.";
@@ -346,12 +353,19 @@ class Database {
 			return "Private: Sorry, I couldn't find any tracks containing " + shortName;
 		}
 		if ( matchingTracks.size() > 1 ) {
-			String titles = "";
-			for ( Track track : matchingTracks
-					) {
-				titles = titles + ", " + track.title;
+			String response = "";
+			for ( int i = 0; i < Math.min( matchingTracks.size(), 3 ); i++ ) {
+				if(response == "") {
+					response = response + matchingTracks.get( i ).title;
+				}
+				else{
+					response = response + " ❙ " + matchingTracks.get( i ).title;
+				}
 			}
-			return "Private: " + "I found: " + titles.substring( 0, Math.min(titles.length(), 41) );
+			if(matchingTracks.size() > 3){
+				response = response + " ❙ +" + (matchingTracks.size() - 3) + " more";
+			}
+			return "Private: " + response;
 		}
 		else {
 			String insertRequest = "INSERT INTO vetoes(timestamp, user, track_id) VALUES(?,?,?)";
