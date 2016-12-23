@@ -63,12 +63,12 @@ class Database {
 	}
 
 	private void checkIfTablesExist() {
-		System.out.println( "Creating tables..." );
+		System.out.println( "Validating SQL schema..." );
 		createTableTracks();
 		createTableChatLog();
 		createTableRequests();
 		createTableVetoes();
-		System.out.println( "Tables created." );
+		System.out.println( "Done." );
 	}
 
 	private void createTableChatLog() {
@@ -308,25 +308,24 @@ class Database {
 		return null;
 	}
 
-	String addRequest( String user, String shortName ) {
-		List<Track> matchingTracks = getMatchingTracks( shortName );
+	String addRequest( String user, String request ) {
+		List<Track> matchingTracks = getMatchingTracks( request );
 		Track lastInRequest = getFinalFromRequests();
 
 		if ( matchingTracks.isEmpty() ) {
-			return "Private: Sorry, I couldn't find any tracks containing " + shortName;
+			return "Private: Sorry, I couldn't find any tracks containing " + request;
 		}
 		if ( matchingTracks.size() > 1 ) {
 			String response = "";
 			for ( int i = 0; i < Math.min( matchingTracks.size(), 3 ); i++ ) {
-				if(response == "") {
+				if ( response == "" ) {
 					response = response + matchingTracks.get( i ).title;
-				}
-				else{
+				} else {
 					response = response + " ❙ " + matchingTracks.get( i ).title;
 				}
 			}
-			if(matchingTracks.size() > 3){
-				response = response + " ❙ +" + (matchingTracks.size() - 3) + " more";
+			if ( matchingTracks.size() > 3 ) {
+				response = response + " ❙ +" + ( matchingTracks.size() - 3 ) + " more";
 			}
 			return "Private: " + response;
 		}
@@ -346,28 +345,26 @@ class Database {
 		}
 	}
 
-	String addVeto( String user, String shortName ) {
-		List<Track> matchingTracks = getMatchingTracks( shortName );
+	String addVeto( String user, String request ) {
+		List<Track> matchingTracks = getMatchingTracks( request );
 
 		if ( matchingTracks.isEmpty() ) {
-			return "Private: Sorry, I couldn't find any tracks containing " + shortName;
+			return "Private: Sorry, I couldn't find any tracks containing " + request;
 		}
 		if ( matchingTracks.size() > 1 ) {
 			String response = "";
 			for ( int i = 0; i < Math.min( matchingTracks.size(), 3 ); i++ ) {
-				if(response == "") {
+				if ( response == "" ) {
 					response = response + matchingTracks.get( i ).title;
-				}
-				else{
+				} else {
 					response = response + " ❙ " + matchingTracks.get( i ).title;
 				}
 			}
-			if(matchingTracks.size() > 3){
-				response = response + " ❙ +" + (matchingTracks.size() - 3) + " more";
+			if ( matchingTracks.size() > 3 ) {
+				response = response + " ❙ +" + ( matchingTracks.size() - 3 ) + " more";
 			}
 			return "Private: " + response;
-		}
-		else {
+		} else {
 			String insertRequest = "INSERT INTO vetoes(timestamp, user, track_id) VALUES(?,?,?)";
 			try ( PreparedStatement statement = connection.prepareStatement( insertRequest ) ) {
 				statement.setLong( 1, System.currentTimeMillis() );
@@ -381,14 +378,17 @@ class Database {
 		}
 	}
 
-	List<Track> getMatchingTracks( String shortName ) {
+	List<Track> getMatchingTracks( String request ) {
 		List<Track> tracks = new ArrayList<>();
 		try ( PreparedStatement statement = connection.prepareStatement( "SELECT * FROM tracks WHERE short_name LIKE ?"
 		) ) {
-			statement.setString( 1, "%" + shortName + "%" );
+			statement.setString( 1, "%" + request + "%" );
 			ResultSet rs = statement.executeQuery();
 			while ( rs.next() ) {
 				Track temp = new Track( new File( rs.getString( "path" ) ) );
+				if(!temp.exists()) {
+					continue;
+				}
 				temp.id = rs.getInt( "id" );
 				temp.title = rs.getString( "title" );
 				temp.shortName = rs.getString( "short_name" );
@@ -415,7 +415,6 @@ class Database {
 			try ( PreparedStatement trackSql = connection.prepareStatement( getTrackData ) ) {
 				trackSql.setInt( 1, requestSqlResults.getInt( "track_id" ) );
 				ResultSet trackData = trackSql.executeQuery();
-
 				Track temp = new Track( new File( trackData.getString( "path" ) ) );
 				temp.id = trackData.getInt( "id" );
 				temp.timestamp = requestSqlResults.getLong( "timestamp" );
@@ -438,7 +437,6 @@ class Database {
 		String sql = "SELECT * FROM tracks WHERE id IN (SELECT id FROM tracks ORDER BY RANDOM() LIMIT 1)";
 		try ( PreparedStatement statement = connection.prepareStatement( sql ) ) {
 			ResultSet rs = statement.executeQuery();
-
 			track = new Track( new File( rs.getString( "path" ) ) );
 			track.id = rs.getInt( "id" );
 			track.title = rs.getString( "title" );

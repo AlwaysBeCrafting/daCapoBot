@@ -14,36 +14,31 @@ import static stream.alwaysbecrafting.dacapobot.Database.DB_INSTANCE;
 class Player {
 	//--------------------------------------------------------------------------
 	private MediaPlayer player;
-	private boolean playerRunning = false;
 	private long timestamp = System.currentTimeMillis();
 	private Track currentTrack;
 
-	Player(){}
+	Player() {}
 
 	void setQueue() {
-		this.currentTrack = DB_INSTANCE.getRandomTrack();
-		System.out.println("queue " + this.currentTrack);
-		initializePlayer();
+		JFXPanel jfxPanel = new JFXPanel();
 
-	}
-
-	void initializePlayer(){
-		if ( playerRunning ) {
-			player.stop();
-		}
-		if ( !playerRunning ) {
-			JFXPanel jfxPanel = new JFXPanel();
+		Track nextTrack = null;
+		while(nextTrack == null || !nextTrack.exists()) {
+			nextTrack = DB_INSTANCE.getRandomTrack();
+			this.currentTrack = nextTrack;
 		}
 
-		player = new MediaPlayer( new Media( currentTrack.toURIString() ) );
-		playerRunning = true;
-
+		System.out.println( "queue " + this.currentTrack );
 	}
 
 	void play() {
-		initializePlayer();
 
-		if(currentTrack.fetchTrackData()){
+		if ( player != null && player.getStatus() == MediaPlayer.Status.PLAYING ) {
+			player.stop();
+		}
+		player = new MediaPlayer( new Media( currentTrack.toURIString() ) );
+
+		if ( currentTrack.fetchTrackData() ) {
 			System.out.println( "Now Playing: " + currentTrack.title );
 		}
 
@@ -51,46 +46,47 @@ class Player {
 			PrintWriter writer = new PrintWriter( Config.CONFIG.props.getProperty( "live_track_file" ), "UTF-8" );
 			writer.println( currentTrack.title );
 			writer.close();
-		}
-		catch (FileNotFoundException | UnsupportedEncodingException e){
+		} catch ( FileNotFoundException | UnsupportedEncodingException e ) {
 			e.printStackTrace();
 		}
 
 		this.player.play();
-		player.setOnEndOfMedia(this::nextTrack);
-}
+		player.setOnEndOfMedia( this::nextTrack );
+	}
 
 	void nextTrack() {
-		Track requestedTrack = Database.DB_INSTANCE.getNextRequested( timestamp );
-		if ( requestedTrack != null ) {
-			timestamp = requestedTrack.timestamp;
-			this.currentTrack = requestedTrack;
-		} else {
-			timestamp = System.currentTimeMillis();
-			this.currentTrack = Database.DB_INSTANCE.getRandomTrack();
+		Track nextTrack = null;
+		while(nextTrack == null || !nextTrack.exists()) {
+
+			Track requestedTrack = Database.DB_INSTANCE.getNextRequested( timestamp );
+			if ( requestedTrack != null ) {
+				timestamp = requestedTrack.timestamp;
+				nextTrack = requestedTrack;
+			} else {
+				timestamp = System.currentTimeMillis();
+				nextTrack = Database.DB_INSTANCE.getRandomTrack();
+			}
 		}
+		this.currentTrack = nextTrack;
 		play();
 	}
 
-
-	String veto( String user, String short_name ) {
+	String veto( String user, String request ) {
 		String veto;
-		if( currentTrack.title
+		if ( currentTrack.title
 				.toLowerCase()
 				.replaceAll( "[^a-z0-9]+", "%" )
-				.contains( (short_name.replaceAll( "[^a-z0-9]+", "%" )) )){
-			veto = DB_INSTANCE.addVeto(user, currentTrack.shortName);
+				.contains( ( request.replaceAll( "[^a-z0-9]+", "%" ) ) ) ) {
+			veto = DB_INSTANCE.addVeto( user, currentTrack.shortName );
 			nextTrack();
+		} else {
+			veto = DB_INSTANCE.addVeto( user, ( request ) );
 		}
-		else{
-			veto = DB_INSTANCE.addVeto(user, (short_name.replaceAll( "[^a-z0-9]+", "%" )));
-		}
-			return veto;
-		}
+		return veto;
+	}
 
-
-	String request( String user, String short_name ) {
-		return DB_INSTANCE.addRequest(user, (short_name.replaceAll( "[^a-z0-9]+", "%" )));
+	String request( String user, String request ) {
+		return DB_INSTANCE.addRequest( user, ( request) );
 	}
 }
 //------------------------------------------------------------------------------

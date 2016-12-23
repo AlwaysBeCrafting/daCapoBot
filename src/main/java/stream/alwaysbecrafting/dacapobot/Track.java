@@ -20,66 +20,66 @@ class Track {
 
 	//--------------------------------------------------------------------------
 
-	Track(File track){
-	this.file = track;
+	Track( File track ) {
+		this.file = track;
 	}
 
 	//--------------------------------------------------------------------------
 
-	String toURIString(){
-		if(!this.file.exists()){
-			System.out.println("Error: File does not Exist: " + this.file.toString());
-			throw new RuntimeException(	);
-		}
+	String toURIString() {
 		return this.file.toURI().toString();
-
 	}
 
 	//--------------------------------------------------------------------------
 
-	String getCanonicalPath(){
+	String getCanonicalPath() {
 		try {
 			return this.file.getCanonicalPath();
 		} catch ( IOException e ) {
 			e.printStackTrace();
 		}
-			return "";
+		return "";
 	}
 
 	//--------------------------------------------------------------------------
 
 	@Override
-	public String toString(){
+	public String toString() {
 		return file.getName();
 
 	}
 
 	//--------------------------------------------------------------------------
 
-	boolean fetchTrackData(){
+	boolean fetchTrackData() {
 		try {
 			Mp3File mp3file = new Mp3File( this.file );
 
 			ID3v1 id3v1 = null;
-			if (mp3file.hasId3v1Tag()){
+			if ( mp3file.hasId3v1Tag() ) {
 				id3v1 = mp3file.getId3v1Tag();
 			}
-			if (mp3file.hasId3v2Tag()){
+			if ( mp3file.hasId3v2Tag() ) {
 				id3v1 = mp3file.getId3v2Tag();
 			}
-			if(id3v1 != null) {
-				this.title  = id3v1.getTitle();
+			if ( id3v1 != null ) {
+				this.title = id3v1.getTitle();
 				this.artist = id3v1.getArtist();
-				this.album  = id3v1.getAlbum();
+				this.album = id3v1.getAlbum();
 				return true;
 			}
-		}
-		catch ( Exception e ){
+		} catch ( Exception e ) {
 			e.printStackTrace();
 		}
 		return false;
 	}
 
+	public boolean exists() {
+		if(this.file.exists()){
+			return true;
+		}else
+			return false;
+	}
 }
 
 //------------------------------------------------------------------------------

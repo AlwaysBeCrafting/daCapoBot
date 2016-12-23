@@ -34,7 +34,7 @@ class BotListener extends ListenerAdapter {
 						if ( veto.startsWith( "Private:" ) ) {
 							event.respondWith( veto.replaceAll( "Private:\\s*", "" ) );
 						}
-						if ( veto.startsWith( "Public:" )){
+						if ( veto.startsWith( "Public:" ) ) {
 							event.respondWith( veto.replaceAll( "Public:\\s+", "" ) );
 						}
 					}
@@ -43,10 +43,10 @@ class BotListener extends ListenerAdapter {
 				case "!request":
 					if ( nick != null && matcher.group( 2 ) != null ) {
 						String request = PLAYER.request( nick, matcher.group( 2 ) );
-						if ( request.startsWith( "Private:" )){
+						if ( request.startsWith( "Private:" ) ) {
 							event.respondWith( request.replaceAll( "Private:\\s*", "" ) );
 						}
-						if ( request.startsWith( "Public:" )){
+						if ( request.startsWith( "Public:" ) ) {
 							event.respondWith( request.replaceAll( "Public:\\s*", "" ) );
 						}
 					}
