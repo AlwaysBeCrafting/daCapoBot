@@ -232,54 +232,6 @@ class Database {
 		}
 	}
 
-	Track getFirst() {
-		String select = "SELECT path FROM tracks ORDER BY id ASC LIMIT 1";
-		try ( PreparedStatement statement = connection.prepareStatement( select ) ) {
-			ResultSet rs = statement.executeQuery();
-			String s = rs.getString( "path" );
-
-			return new Track( new File( s ) );
-		} catch ( Exception e ) {
-			e.printStackTrace();
-			return null;
-		}
-	}
-
-	List<Track> getAfter( Track currentTrack, int numberToGet ) {
-		int trackID;
-		currentTrack.fetchTrackData();
-		List<Track> trackList = new ArrayList<>();
-
-		//get next track id from current track title
-		String id = "SELECT id FROM tracks WHERE title = ? LIMIT 1";
-		String path = "SELECT path FROM tracks WHERE id > ? LIMIT ?";
-		try ( PreparedStatement getPath = connection.prepareStatement( path );
-		      PreparedStatement getId = connection.prepareStatement( id ) ) {
-
-			getId.setString( 1, currentTrack.title );
-
-			ResultSet rs = getId.executeQuery();
-
-			if ( rs.next() ) {
-				trackID = rs.getInt( "id" );
-				getPath.setInt( 1, trackID );
-				getPath.setInt( 2, numberToGet );
-				rs = getPath.executeQuery();
-				while ( rs.next() ) {
-					trackList.add( new Track( new File( rs.getString( "path" ) ) ) );
-				}
-
-			} else {
-				trackList.add( getFirst() );
-
-			}
-			return trackList;
-		} catch ( Exception e ) {
-			e.printStackTrace();
-			return null;
-		}
-	}
-
 	Track getFinalFromRequests() {
 		String select = "SELECT * FROM requests ORDER BY id DESC LIMIT 1";
 		try ( PreparedStatement statement = connection.prepareStatement( select ) ) {
