@@ -4,8 +4,11 @@ import org.pircbotx.hooks.ListenerAdapter;
 import org.pircbotx.hooks.events.ConnectEvent;
 import org.pircbotx.hooks.events.MessageEvent;
 
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static stream.alwaysbecrafting.dacapobot.Database.DB_INSTANCE;
 
 //==============================================================================
 class BotListener extends ListenerAdapter {
@@ -30,12 +33,34 @@ class BotListener extends ListenerAdapter {
 
 				case "!veto":
 					if ( nick != null && matcher.group( 2 ) != null ) {
-						String veto = PLAYER.veto( nick, matcher.group( 2 ) );
-						if ( veto.startsWith( "Private:" ) ) {
-							event.respondWith( veto.replaceAll( "Private:\\s*", "" ) );
-						}
-						if ( veto.startsWith( "Public:" ) ) {
-							event.respondWith( veto.replaceAll( "Public:\\s+", "" ) );
+
+						if ( PLAYER.getCurrentTitle()
+								.toLowerCase()
+								.replaceAll( "[^a-z0-9]+", "%" )
+								.contains( ( matcher.group( 2 ).replaceAll( "[^a-z0-9]+", "%" ) ) ) ) {
+							DB_INSTANCE.addVeto( nick, PLAYER.getCurrentTitle() );
+							event.respondWith( PLAYER.getCurrentTitle() + " vetoed, thank you." );
+							PLAYER.nextTrack();
+						} else {
+							List<Track> trackList = DB_INSTANCE.addVeto( nick, ( matcher.group( 2 ) ) );
+
+							if ( trackList.isEmpty() ) {
+								event.respondWith( "Private: Sorry, I couldn't find any tracks containing " + matcher.group( 2 ) );
+							}
+							if ( trackList.size() > 1 ) {
+								String response = "";
+								for ( int i = 0; i < Math.min( trackList.size(), 3 ); i++ ) {
+									if ( "".equals( response ) ) {
+										response = response + trackList.get( i ).title;
+									} else {
+										response = response + " ❙ " + trackList.get( i ).title;
+									}
+								}
+								if ( trackList.size() > 3 ) {
+									response = response + " ❙ +" + ( trackList.size() - 3 ) + " more";
+								}
+								event.respondWith( response );
+							}
 						}
 					}
 					break;

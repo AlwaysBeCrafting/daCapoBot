@@ -71,22 +71,13 @@ class Player {
 		play();
 	}
 
-	String veto( String user, String request ) {
-		String veto;
-		if ( currentTrack.title
-				.toLowerCase()
-				.replaceAll( "[^a-z0-9]+", "%" )
-				.contains( ( request.replaceAll( "[^a-z0-9]+", "%" ) ) ) ) {
-			veto = DB_INSTANCE.addVeto( user, currentTrack.title );
-			nextTrack();
-		} else {
-			veto = DB_INSTANCE.addVeto( user, ( request ) );
-		}
-		return veto;
-	}
 
 	String request( String user, String request ) {
 		return DB_INSTANCE.addRequest( user, ( request) );
+	}
+
+	public String getCurrentTitle() {
+		return currentTrack.title;
 	}
 }
 //------------------------------------------------------------------------------
