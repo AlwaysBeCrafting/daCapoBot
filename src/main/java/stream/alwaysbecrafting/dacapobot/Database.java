@@ -305,31 +305,10 @@ class Database {
 		return null;
 	}
 
-	String addRequest( String user, final String request ) {
+	List<Track> addRequest( String user, final String request ) {
 		List<Track> matchingTracks = getMatchingTracks( request );
-		matchingTracks.forEach( Track::allToConsole );
-		Track lastInRequest = getFinalFromRequests();
 
-		if ( matchingTracks.isEmpty() ) {
-			return "Private: Sorry, I couldn't find any tracks containing " + request;
-		}
-		if ( matchingTracks.size() > 1 ) {
-			String response = "";
-			for ( int i = 0; i < Math.min( matchingTracks.size(), 3 ); i++ ) {
-				if ( "".equals( response ) ) {
-					response = response + matchingTracks.get( i ).title;
-				} else {
-					response = response + " ❙ " + matchingTracks.get( i ).title;
-				}
-			}
-			if ( matchingTracks.size() > 3 ) {
-				response = response + " ❙ +" + ( matchingTracks.size() - 3 ) + " more";
-			}
-			return "Private: " + response;
-		}
-		if ( lastInRequest != null && matchingTracks.get( 0 ).title.equalsIgnoreCase( lastInRequest.title ) ) {
-			return matchingTracks.get( 0 ).title + " is the last song in the request list. Please choose a different track.";
-		} else {
+		if (matchingTracks.size() == 1 ) {
 			String insertRequest = "INSERT INTO requests(timestamp, user, track_id) VALUES(?,?,?)";
 			try ( PreparedStatement statement = connection.prepareStatement( insertRequest ) ) {
 				statement.setLong( 1, System.currentTimeMillis() );
@@ -339,8 +318,8 @@ class Database {
 			} catch ( Exception e ) {
 				e.printStackTrace();
 			}
-			return "Public: " + matchingTracks.get( 0 ).title + " added to the queue.";
 		}
+		return matchingTracks;
 	}
 
 	List<Track> addVeto( String user, final String request ) {

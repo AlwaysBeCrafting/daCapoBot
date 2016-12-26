@@ -67,12 +67,31 @@ class BotListener extends ListenerAdapter {
 
 				case "!request":
 					if ( nick != null && matcher.group( 2 ) != null ) {
-						String request = PLAYER.request( nick, matcher.group( 2 ) );
-						if ( request.startsWith( "Private:" ) ) {
-							event.respondWith( request.replaceAll( "Private:\\s*", "" ) );
+						Track lastInRequest = DB_INSTANCE.getFinalFromRequests();
+						List<Track> matchingTracks = DB_INSTANCE.addRequest( nick, matcher.group(2).toString() );
+
+						if ( matchingTracks.isEmpty() ) {
+							event.respondWith( "Sorry, I couldn't find any tracks containing " + matcher.group(2));
 						}
-						if ( request.startsWith( "Public:" ) ) {
-							event.respondWith( request.replaceAll( "Public:\\s*", "" ) );
+						if ( matchingTracks.size() == 1 ){
+							event.respondWith( matchingTracks.get( 0 ).title + " added to the queue." );
+						}
+						if ( matchingTracks.size() > 1 ) {
+							String response = "";
+							for ( int i = 0; i < Math.min( matchingTracks.size(), 3 ); i++ ) {
+								if ( "".equals( response ) ) {
+									response = response + matchingTracks.get( i ).title;
+								} else {
+									response = response + " ❙ " + matchingTracks.get( i ).title;
+								}
+							}
+							if ( matchingTracks.size() > 3 ) {
+								response = response + " ❙ +" + ( matchingTracks.size() - 3 ) + " more";
+							}
+							event.respondWith( response );
+						}
+						if ( lastInRequest != null && matchingTracks.get( 0 ).title.equalsIgnoreCase( lastInRequest.title ) ) {
+							event.respondWith( matchingTracks.get( 0 ).title + " is the last song in the request list. Please choose a different track.");
 						}
 					}
 					break;

@@ -71,11 +71,6 @@ class Player {
 		play();
 	}
 
-
-	String request( String user, String request ) {
-		return DB_INSTANCE.addRequest( user, ( request) );
-	}
-
 	public String getCurrentTitle() {
 		return currentTrack.title;
 	}
