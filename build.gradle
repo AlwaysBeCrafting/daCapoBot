@@ -1,7 +1,6 @@
 group 'stream.alwaysbecrafting'
 version '0.1'
 
-
 apply plugin: 'java'
 apply plugin: 'application'
 mainClassName = "stream.alwaysbecrafting.dacapobot.Main"
