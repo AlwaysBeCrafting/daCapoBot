@@ -13,6 +13,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Scanner;
 import java.util.stream.Collectors;
 
 import static java.lang.System.currentTimeMillis;
@@ -64,92 +65,35 @@ class Database {
 
 	private void checkIfTablesExist() {
 		System.out.println( "Validating SQL schema..." );
-		createTableTracks();
-		createTableChatLog();
-		createTableRequests();
-		createTableVetoes();
+
+		List<String> sqlList = new ArrayList<>();
+		try(Scanner scanner = new Scanner( ClassLoader.getSystemResourceAsStream( "schema.sql" ))){
+			String scannedLine;
+			scanner.useDelimiter( ";" );
+
+			while( scanner.hasNext() ){
+				scannedLine = scanner.next();
+				if(!scannedLine.matches( "\\s*" )) {
+					sqlList.add( scannedLine + ";" );
+				}
+			}
+		}
+
+		try ( Statement stmt = connection.createStatement() ) {
+			//noinspection SimplifyStreamApiCallChains
+			sqlList.stream().forEachOrdered( sql -> {
+				try {
+					stmt.execute( sql );
+				} catch ( SQLException e ) {
+					e.printStackTrace();
+				}
+			});
+
+		} catch ( SQLException e ) {
+			e.printStackTrace();
+		}
+
 		System.out.println( "Done." );
-	}
-
-	private void createTableChatLog() {
-		System.out.println( "\tchat_log" );
-		String sql = "CREATE TABLE IF NOT EXISTS chat_log ("
-				+ "id          integer     PRIMARY KEY,"
-				+ "timestamp   long        NOT NULL,"
-				+ "user        text        COLLATE NOCASE,"
-				+ "message     text        COLLATE NOCASE"
-				+ ");";
-
-		try ( Statement stmt = connection.createStatement() ) {
-			// create a new table
-			stmt.execute( sql );
-		} catch ( SQLException e ) {
-			e.printStackTrace();
-		}
-	}
-
-	private void createTableTracks() {
-		System.out.println( "\ttracks" );
-
-		String sql = "CREATE TABLE IF NOT EXISTS tracks ("
-				+ "id          integer     PRIMARY KEY    ,"
-				+ "title       text        COLLATE NOCASE ,"
-				+ "path        text        NOT NULL       ,"
-				+ "artist      text        COLLATE NOCASE ,"
-				+ "album       text        COLLATE NOCASE  "
-				+ ");                                       ";
-
-		try ( Statement stmt = connection.createStatement() ) {
-			// create a new table
-			stmt.execute( sql );
-		} catch ( SQLException e ) {
-			e.printStackTrace();
-		}
-
-
-	}
-
-	private void createTableRequests() {
-		System.out.println( "\trequest" );
-
-		String sql =
-				"CREATE TABLE IF NOT EXISTS requests ("
-						+ "id          integer PRIMARY KEY                ,"
-						+ "timestamp   long    NOT NULL                   ,"
-						+ "user        text    COLLATE NOCASE             ,"
-						+ "track_id    integer NOT NULL                   ,"
-						+ "                                                "
-						+ "FOREIGN KEY (track_id) REFERENCES tracks(id)    "
-						+ ");";
-
-		try ( Statement stmt = connection.createStatement() ) {
-			// create a new table
-			stmt.execute( sql );
-		} catch ( SQLException e ) {
-			e.printStackTrace();
-		}
-
-	}
-
-	private void createTableVetoes() {
-		System.out.println( "\tvetoes" );
-
-		String sql =
-				"CREATE TABLE IF NOT EXISTS vetoes ("
-						+ "id          integer PRIMARY KEY     ,"
-						+ "timestamp   long    NOT NULL        ,"
-						+ "user        text    COLLATE NOCASE  ,"
-						+ "track_id    integer NOT NULL        ,"
-						+ "                                     "
-						+ "FOREIGN KEY (track_id) REFERENCES tracks(id)"
-						+ ");";
-
-		try ( Statement stmt = connection.createStatement() ) {
-			// create a new table
-			stmt.execute( sql );
-		} catch ( SQLException e ) {
-			e.printStackTrace();
-		}
 	}
 
 	void addMP3s( File dir ) {
