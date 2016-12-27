@@ -13,6 +13,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Scanner;
 import java.util.stream.Collectors;
 
 import static java.lang.System.currentTimeMillis;
@@ -64,10 +65,48 @@ class Database {
 
 	private void checkIfTablesExist() {
 		System.out.println( "Validating SQL schema..." );
-		createTableTracks();
-		createTableChatLog();
-		createTableRequests();
-		createTableVetoes();
+
+		System.out.println( new File( Thread.currentThread().getContextClassLoader().getResource( "schema.sql" ).getFile().toString()));
+
+		List<String> sqlList = new ArrayList<>();
+		try(Scanner scanner = new Scanner( new File( Thread.currentThread()
+					.getContextClassLoader()
+					.getResource( "schema.sql" )
+					.getFile()))){
+			String scannedLine;
+			scanner.useDelimiter( ";" );
+
+			while( scanner.hasNext() ){
+				scannedLine = scanner.next();
+				if(!scannedLine.matches( "\\s*" )) {
+					sqlList.add( scannedLine + ";" );
+				}
+			}
+		}
+		catch( IOException e ){
+			e.printStackTrace();
+		}
+		try ( Statement stmt = connection.createStatement() ) {
+			sqlList.stream().forEachOrdered( sql -> {
+				// create a new table
+				try {
+					stmt.execute( sql );
+				} catch ( SQLException e ) {
+					e.printStackTrace();
+				}
+			});
+
+		} catch ( SQLException e ) {
+			e.printStackTrace();
+		}
+
+
+
+
+//		createTableTracks();
+//		createTableChatLog();
+//		createTableRequests();
+//		createTableVetoes();
 		System.out.println( "Done." );
 	}
 
