@@ -4,9 +4,11 @@ import org.pircbotx.hooks.ListenerAdapter;
 import org.pircbotx.hooks.events.ConnectEvent;
 import org.pircbotx.hooks.events.MessageEvent;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static stream.alwaysbecrafting.dacapobot.Database.DB_INSTANCE;
 
@@ -14,7 +16,7 @@ import static stream.alwaysbecrafting.dacapobot.Database.DB_INSTANCE;
 class BotListener extends ListenerAdapter {
 	//--------------------------------------------------------------------------
 	private final Player PLAYER = new Player();
-	private static final Pattern pattern = Pattern.compile( "^(\\S+)\\s*(.+)?" );
+	private static final Pattern pattern = Pattern.compile( "^(\\S+)(\\s+(.*))?" );
 
 	@Override
 	public void onMessage( MessageEvent event ) throws Exception {
@@ -23,29 +25,39 @@ class BotListener extends ListenerAdapter {
 		}
 
 		String nick = event.getUser().getNick();
+		System.out.println(nick);
 		String eventMessage = event.getMessage().toLowerCase();
-
+		System.out.println(eventMessage);
 		Matcher matcher = pattern.matcher( eventMessage );
+		if ( matcher.find() ) {
 
-		while ( matcher.find() ) {
+			List<String> matcherArgs = Arrays.stream( matcher.group( 3 ).split( "\\s+" ) )
+					.filter( s -> s.length() > 2 )
+					.collect( Collectors.toList());
 
 			switch ( matcher.group( 1 ) ) {
 
 				case "!veto":
-					if ( nick != null && matcher.group( 2 ) != null ) {
-
-						if ( PLAYER.getCurrentTitle()
+					if ( nick != null && matcher.group( 3 ) != null ) {
+						if ( matcherArgs.isEmpty() ){
+							event.respondWith( "Sorry, " + matcher.group(3) + " is too vague. See '!help !veto'" +
+									" for more info." );
+						}
+						else if (matcherArgs.get(0).toLowerCase().matches( "[remix]{1,5}" )){
+							event.respondWith( "Illegal first argument " + matcherArgs.get(0) + " too similar to 'remix'" );
+						}
+						else if ( PLAYER.getCurrentTitle()
 								.toLowerCase()
 								.replaceAll( "[^a-z0-9]+", "%" )
-								.contains( ( matcher.group( 2 ).replaceAll( "[^a-z0-9]+", "%" ) ) ) ) {
+								.contains( ( matcherArgs.toString().replaceAll( "[^a-z0-9]+", "%" ) ) ) ) {
 							DB_INSTANCE.addVeto( nick, PLAYER.getCurrentTitle() );
 							event.respondWith( PLAYER.getCurrentTitle() + " vetoed, thank you." );
 							PLAYER.nextTrack();
 						} else {
-							List<Track> trackList = DB_INSTANCE.addVeto( nick, ( matcher.group( 2 ) ) );
+							List<Track> trackList = DB_INSTANCE.addVeto( nick, ( matcherArgs.toString() ) );
 
 							if ( trackList.isEmpty() ) {
-								event.respondWith( "Private: Sorry, I couldn't find any tracks containing " + matcher.group( 2 ) );
+								event.respondWith( "Sorry, I couldn't find any tracks containing " + matcher.group( 2 ) );
 							}
 							if ( trackList.size() > 1 ) {
 								String response = "";
@@ -66,7 +78,16 @@ class BotListener extends ListenerAdapter {
 					break;
 
 				case "!request":
-					if ( nick != null && matcher.group( 2 ) != null ) {
+					if ( matcherArgs.isEmpty() ) {
+						event.respondWith( "Sorry, " + matcher.group( 3 ) + " is too vague. See '!help !request'" +
+								" for more info." );
+						break;
+					}
+					else if (matcherArgs.get(0).toLowerCase().matches( "[remix]{1,5}" )){
+						event.respondWith( "Illegal first argument " + matcherArgs.get(0) + " too similar to 'remix'" );
+						break;
+					}
+					else if ( nick != null && matcher.group( 3 ) != null ) {
 						Track lastInRequest = DB_INSTANCE.getFinalFromRequests();
 						List<Track> matchingTracks = DB_INSTANCE.addRequest( nick, matcher.group(2).toString() );
 
@@ -110,9 +131,35 @@ class BotListener extends ListenerAdapter {
 					break;
 
 				case "!help":
-					event.respondWith( "!whoru, !help, !veto, !request, !suggestions" );
-					break;
-
+					if (matcherArgs.isEmpty()) {
+						event.respondWith( "!help [Option] ... Options: !whoru, !help, !veto, !request, !suggestions" );
+						break;
+					}
+					if (matcherArgs.get(0).equals( "!help" )){
+						event.respondWith( "Need more help? Have a kitty. https://goo.gl/nRVwDf" );
+						break;
+					}
+					if (matcherArgs.get(0).equals( "!whoru" )){
+						event.respondWith( "Bzzzt, whoami? whoru? ...!whoru for more." );
+						break;
+					}
+					if (matcherArgs.get(0).equals( "!veto" )){
+						event.respondWith( "Usage: !veto {title}" );
+						break;
+					}
+					if (matcherArgs.get(0).equals( "!request" )){
+						event.respondWith( "Usage: !request {title}" );
+						break;
+					}
+					if (matcherArgs.get(0).equals( "!suggestions" )){
+						event.respondWith( "Don't know how to submit a !suggestion? Here's more info than " +
+								"you probably wanted: https://guides.github.com/features/issues/" );
+						break;
+					}
+					else{
+						event.respondWith( "!help [Option] ... Options: !whoru, !help, !veto, !request, !suggestions" );
+						break;
+					}
 				default:
 					break;
 			}
