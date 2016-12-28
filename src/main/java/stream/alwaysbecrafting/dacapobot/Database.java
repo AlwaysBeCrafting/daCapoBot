@@ -204,7 +204,7 @@ class Database {
 	List<Track> addRequest( String user, final String request ) {
 		List<Track> matchingTracks = getMatchingTracks( request );
 
-		if (matchingTracks.size() == 1 ) {
+		if (matchingTracks.size() == 1 && !matchingTracks.get( 0 ).title.equalsIgnoreCase( getFinalFromRequests().title ) ) {
 			String insertRequest = "INSERT INTO requests(timestamp, user, track_id) VALUES(?,?,?)";
 			try ( PreparedStatement statement = connection.prepareStatement( insertRequest ) ) {
 				statement.setLong( 1, System.currentTimeMillis() );

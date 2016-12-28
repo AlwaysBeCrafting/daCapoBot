@@ -6,6 +6,7 @@ import org.pircbotx.hooks.events.MessageEvent;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -17,7 +18,7 @@ class BotListener extends ListenerAdapter {
 	//--------------------------------------------------------------------------
 	private final Player PLAYER = new Player();
 	private static final Pattern pattern = Pattern.compile( "^(\\S+)(\\s+(.*))?" );
-
+	private final Random random = new Random();
 	@Override
 	public void onMessage( MessageEvent event ) throws Exception {
 		if ( event.getUser().getNick() != null ) {
@@ -87,15 +88,39 @@ class BotListener extends ListenerAdapter {
 						event.respondWith( "Illegal first argument " + matcherArgs.get(0) + " too similar to 'remix'" );
 						break;
 					}
-					else if ( nick != null && matcher.group( 3 ) != null ) {
-						Track lastInRequest = DB_INSTANCE.getFinalFromRequests();
-						List<Track> matchingTracks = DB_INSTANCE.addRequest( nick, matcher.group(2).toString() );
+					else if (matcherArgs.get(0).toLowerCase().matches( "--random" ) && matcherArgs.get(1).isEmpty()){
+						event.respondWith( "--random requires a partial title." );
+						break;
+					}
+					else if (matcherArgs.get(0).toLowerCase().matches( "--random" ) && !matcherArgs.get(1).isEmpty()){
+						String randomRequest = "";
+						for ( int i = 1; i < matcherArgs.size(); i++ ) {
+							if("".equals( randomRequest )){
+								randomRequest = matcherArgs.get(i);
+							}else {
+								randomRequest = randomRequest + " " + matcherArgs.get( i );
+							}
+						}
 
+						List<Track> matchingTracks = DB_INSTANCE.addRequest( nick, randomRequest);
 						if ( matchingTracks.isEmpty() ) {
-							event.respondWith( "Sorry, I couldn't find any tracks containing " + matcher.group(2));
+							event.respondWith( "Sorry, I couldn't find any tracks containing " + matcher.group(3).replaceAll( "--random ", "" ));
 						}
 						if ( matchingTracks.size() == 1 ){
 							event.respondWith( matchingTracks.get( 0 ).title + " added to the queue." );
+						}
+						if ( matchingTracks.size() > 1 ) {
+							int randomTrack = random.nextInt(matchingTracks.size());
+							DB_INSTANCE.addRequest( nick, matchingTracks.get(randomTrack).title );
+							event.respondWith( matchingTracks.get(randomTrack).title + " added to the queue.");
+						}
+					}
+					else if ( nick != null && matcher.group( 3 ) != null ) {
+						Track lastInRequest = DB_INSTANCE.getFinalFromRequests();
+						List<Track> matchingTracks = DB_INSTANCE.addRequest( nick, matcher.group(3).toString() );
+
+						if ( matchingTracks.isEmpty() ) {
+							event.respondWith( "Sorry, I couldn't find any tracks containing " + matcher.group(3));
 						}
 						if ( matchingTracks.size() > 1 ) {
 							String response = "";
@@ -113,6 +138,9 @@ class BotListener extends ListenerAdapter {
 						}
 						if ( lastInRequest != null && matchingTracks.get( 0 ).title.equalsIgnoreCase( lastInRequest.title ) ) {
 							event.respondWith( matchingTracks.get( 0 ).title + " is the last song in the request list. Please choose a different track.");
+						}
+						if ( matchingTracks.size() == 1 ){
+							event.respondWith( matchingTracks.get( 0 ).title + " added to the queue." );
 						}
 					}
 					break;
