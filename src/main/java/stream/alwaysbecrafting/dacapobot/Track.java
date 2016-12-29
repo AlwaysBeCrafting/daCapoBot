@@ -40,15 +40,6 @@ class Track {
 		return "";
 	}
 
-	//--------------------------------------------------------------------------
-
-	@Override
-	public String toString() {
-		return file.getName();
-
-	}
-
-	//--------------------------------------------------------------------------
 
 	boolean fetchTrackData() {
 		try {
@@ -74,19 +65,17 @@ class Track {
 	}
 
 	public boolean exists() {
-		if ( this.file.exists() ) {
-			return true;
-		} else
-			return false;
+		return this.file.exists();
 	}
 
-	public void allToConsole() {
-		System.out.println( this.id );
-		System.out.println( this.timestamp );
-		System.out.println( this.title );
-		System.out.println( this.file );
-		System.out.println( this.artist );
-		System.out.println( this.album );
+	@Override
+	public String toString(){
+		return this.id
+			+ " " + this.timestamp
+			+ " " + this.title
+			+ " " + this.file
+			+ " " + this.artist
+			+ " " + this.album;
 
 	}
 }

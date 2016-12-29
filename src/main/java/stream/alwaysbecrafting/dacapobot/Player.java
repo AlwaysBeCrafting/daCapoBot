@@ -33,9 +33,7 @@ class Player {
 
 	void play() {
 
-		if ( player != null && player.getStatus() == MediaPlayer.Status.PLAYING ) {
-			player.stop();
-		}
+		stop();
 		player = new MediaPlayer( new Media( currentTrack.toURIString() ) );
 
 		if ( currentTrack.fetchTrackData() ) {
@@ -73,6 +71,12 @@ class Player {
 
 	public String getCurrentTitle() {
 		return currentTrack.title;
+	}
+
+	public void stop() {
+		if ( player != null && player.getStatus() == MediaPlayer.Status.PLAYING ) {
+			player.stop();
+		}
 	}
 }
 //------------------------------------------------------------------------------

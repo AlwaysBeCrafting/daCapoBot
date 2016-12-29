@@ -252,7 +252,6 @@ class Database {
 				temp.artist = rs.getString( "artist" );
 				temp.album = rs.getString( "album" );
 				tracks.add( temp );
-				temp.allToConsole();
 			}
 		} catch ( SQLException e ) {
 			e.printStackTrace();
@@ -306,6 +305,14 @@ class Database {
 		return track;
 	}
 
+	public void close() {
+		try {
+			connection.close();
+		} catch ( SQLException e ) {
+			e.printStackTrace();
+		}
+
+	}
 }
 
 

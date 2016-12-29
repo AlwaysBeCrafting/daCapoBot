@@ -3,8 +3,10 @@ package stream.alwaysbecrafting.dacapobot;
 import org.pircbotx.hooks.ListenerAdapter;
 import org.pircbotx.hooks.events.ConnectEvent;
 import org.pircbotx.hooks.events.MessageEvent;
+import org.pircbotx.hooks.events.QuitEvent;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.regex.Matcher;
@@ -17,26 +19,46 @@ import static stream.alwaysbecrafting.dacapobot.Database.DB_INSTANCE;
 class BotListener extends ListenerAdapter {
 	//--------------------------------------------------------------------------
 	private final Player PLAYER = new Player();
+	private final Random RANDOM = new Random();
 	private static final Pattern pattern = Pattern.compile( "^(\\S+)(\\s+(.*))?" );
-	private final Random random = new Random();
+
+	@Override
+	public void onQuit( QuitEvent event ) throws Exception{
+		super.onQuit(event);
+		PLAYER.stop();
+		DB_INSTANCE.close();
+	}
+
 	@Override
 	public void onMessage( MessageEvent event ) throws Exception {
+
+		super.onMessage( event );
+
 		if ( event.getUser().getNick() != null ) {
 			Database.DB_INSTANCE.logChat( event.getUser().getNick(), event.getMessage() );
 		}
 
 		String nick = event.getUser().getNick();
-		System.out.println(nick);
 		String eventMessage = event.getMessage().toLowerCase();
-		System.out.println(eventMessage);
 		Matcher matcher = pattern.matcher( eventMessage );
 		if ( matcher.find() ) {
-
-			List<String> matcherArgs = Arrays.stream( matcher.group( 3 ).split( "\\s+" ) )
-					.filter( s -> s.length() > 2 )
-					.collect( Collectors.toList());
-
+			System.out.println(matcher.group());
+			List<String> matcherArgs = Collections.emptyList();
+			if (matcher.group(3) != null) {
+				matcherArgs = Arrays.stream( matcher.group( 3 ).split( "\\s+" ) )
+						.filter( s -> s.length() > 2 )
+						.collect( Collectors.toList() );
+			}
 			switch ( matcher.group( 1 ) ) {
+				case "!shutdown":
+					if ( "Alexander_Prime".equalsIgnoreCase( nick ) || "FireSetter".equalsIgnoreCase( nick ) ){
+						event.respondWith( "Clumsy Robot stopped moving!" );
+						event.getBot().send().quitServer();
+
+					}else{
+						event.respondWith( "I'm sorry " + nick + ", I'm afraid I can't do that." );
+					}
+					break;
 
 				case "!veto":
 					if ( nick != null && matcher.group( 3 ) != null ) {
@@ -50,7 +72,7 @@ class BotListener extends ListenerAdapter {
 						else if ( PLAYER.getCurrentTitle()
 								.toLowerCase()
 								.replaceAll( "[^a-z0-9]+", "%" )
-								.contains( ( matcherArgs.toString().replaceAll( "[^a-z0-9]+", "%" ) ) ) ) {
+								.contains( ( matcher.group(3).replaceAll( "[^a-z0-9]+", "%" ) ) ) ) {
 							DB_INSTANCE.addVeto( nick, PLAYER.getCurrentTitle() );
 							event.respondWith( PLAYER.getCurrentTitle() + " vetoed, thank you." );
 							PLAYER.nextTrack();
@@ -110,7 +132,7 @@ class BotListener extends ListenerAdapter {
 							event.respondWith( matchingTracks.get( 0 ).title + " added to the queue." );
 						}
 						if ( matchingTracks.size() > 1 ) {
-							int randomTrack = random.nextInt(matchingTracks.size());
+							int randomTrack = RANDOM.nextInt(matchingTracks.size());
 							DB_INSTANCE.addRequest( nick, matchingTracks.get(randomTrack).title );
 							event.respondWith( matchingTracks.get(randomTrack).title + " added to the queue.");
 						}
@@ -163,23 +185,23 @@ class BotListener extends ListenerAdapter {
 						event.respondWith( "!help [Option] ... Options: !whoru, !help, !veto, !request, !suggestions" );
 						break;
 					}
-					if (matcherArgs.get(0).equals( "!help" )){
+					if (matcherArgs.get(0).equals( "!help" ) || matcherArgs.get(0).equals( "help" )){
 						event.respondWith( "Need more help? Have a kitty. https://goo.gl/nRVwDf" );
 						break;
 					}
-					if (matcherArgs.get(0).equals( "!whoru" )){
+					if (matcherArgs.get(0).equals( "!whoru") || matcherArgs.get(0).equals( "whoru")){
 						event.respondWith( "Bzzzt, whoami? whoru? ...!whoru for more." );
 						break;
 					}
-					if (matcherArgs.get(0).equals( "!veto" )){
+					if (matcherArgs.get(0).equals( "!veto" ) || matcherArgs.get(0).equals( "veto" )){
 						event.respondWith( "Usage: !veto {title}" );
 						break;
 					}
-					if (matcherArgs.get(0).equals( "!request" )){
-						event.respondWith( "Usage: !request {title}" );
+					if (matcherArgs.get(0).equals( "!request" ) || matcherArgs.get(0).equals( "request" )){
+						event.respondWith( "Usage: !request {title} or !request --random {title}" );
 						break;
 					}
-					if (matcherArgs.get(0).equals( "!suggestions" )){
+					if (matcherArgs.get(0).equals( "!suggestions" ) || matcherArgs.get(0).equals( "suggestions" )){
 						event.respondWith( "Don't know how to submit a !suggestion? Here's more info than " +
 								"you probably wanted: https://guides.github.com/features/issues/" );
 						break;
@@ -192,11 +214,11 @@ class BotListener extends ListenerAdapter {
 					break;
 			}
 		}
-
 	}
 
 	@Override
-	public void onConnect( ConnectEvent event ) {
+	public void onConnect( ConnectEvent event ) throws Exception {
+		super.onConnect( event );
 		try {
 			Database.DB_INSTANCE.addMP3s( new Config().getMusicDir() );
 
