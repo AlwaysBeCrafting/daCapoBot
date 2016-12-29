@@ -42,7 +42,6 @@ class BotListener extends ListenerAdapter {
 		String eventMessage = event.getMessage().toLowerCase();
 		Matcher matcher = pattern.matcher( eventMessage );
 		if ( matcher.find() ) {
-			System.out.println(matcher.group());
 			List<String> matcherArgs = Collections.emptyList();
 			if (matcher.group(3) != null) {
 				matcherArgs = Arrays.stream( matcher.group( 3 ).split( "\\s+" ) )
@@ -51,13 +50,13 @@ class BotListener extends ListenerAdapter {
 			}
 			switch ( matcher.group( 1 ) ) {
 				case "!shutdown":
-					if ( "Alexander_Prime".equalsIgnoreCase( nick ) || "FireSetter".equalsIgnoreCase( nick ) ){
-						event.respondWith( "Clumsy Robot stopped moving!" );
-						event.getBot().send().quitServer();
-
-					}else{
-						event.respondWith( "I'm sorry " + nick + ", I'm afraid I can't do that." );
-					}
+					List<String> admins = Arrays.asList( Config.CONFIG.getProperty( "admins" ).toString().split( "," ) );
+					admins.forEach( s -> {
+						if(s.equals( nick )) {
+							event.respondWith( "Clumsy Robot stopped moving!" );
+							event.getBot().send().quitServer();
+						}});
+					event.respondWith( "I'm sorry " + nick + ", I'm afraid I can't do that." );
 					break;
 
 				case "!veto":
@@ -190,7 +189,7 @@ class BotListener extends ListenerAdapter {
 						break;
 					}
 					if (matcherArgs.get(0).equals( "!whoru") || matcherArgs.get(0).equals( "whoru")){
-						event.respondWith( "Bzzzt, whoami? whoru? ...!whoru for more." );
+						event.respondWith( "Error: Too many arguments." );
 						break;
 					}
 					if (matcherArgs.get(0).equals( "!veto" ) || matcherArgs.get(0).equals( "veto" )){

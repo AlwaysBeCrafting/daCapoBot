@@ -22,7 +22,8 @@ class Config {
 			,"bot_name"
 			,"irc_channel"
 			,"oauth"
-			,"live_track_file");
+			,"live_track_file"
+			,"admins");
 
 
 	Config() {
@@ -37,6 +38,7 @@ class Config {
 					props.setProperty( "irc_channel", "#test" );
 					props.setProperty( "oauth", "BIGOAUTHTOKENHERE" );
 					props.setProperty( "live_track_file", "location where the current track title stored." );
+					props.setProperty( "admins", "#,#" );
 					props.store( output, null );
 				}
 				System.err.println( "Error: Properties file not exist " + file.getCanonicalPath() + "\n\t\tCreating, please edit before next run." );
@@ -85,7 +87,8 @@ class Config {
 	}
 
 
-
-
+	public String getProperty( String property ) {
+		return props.getProperty( property ).toString();
+	}
 }
 //------------------------------------------------------------------------------
