@@ -4,6 +4,11 @@ CREATE TABLE IF NOT EXISTS chat_log (
 	user        TEXT        COLLATE NOCASE,
 	message     TEXT        COLLATE NOCASE);
 
+CREATE TABLE IF NOT EXISTS quotes (
+    id          INTEGER     PRIMARY KEY,
+	timestamp   INTEGER     NOT NULL,
+	quote     TEXT        COLLATE NOCASE);
+
 CREATE TABLE IF NOT EXISTS tracks (
 	id          INTEGER     PRIMARY KEY    ,
 	title       TEXT        COLLATE NOCASE ,
