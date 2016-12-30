@@ -76,6 +76,13 @@ class Player {
 	public void stop() {
 		if ( player != null && player.getStatus() == MediaPlayer.Status.PLAYING ) {
 			player.stop();
+			try {
+				PrintWriter writer = new PrintWriter( Config.CONFIG.props.getProperty( "live_track_file" ), "UTF-8" );
+				writer.println( "" );
+				writer.close();
+			} catch ( FileNotFoundException | UnsupportedEncodingException e ) {
+				e.printStackTrace();
+			}
 		}
 	}
 }
