@@ -313,6 +313,33 @@ class Database {
 		}
 
 	}
+
+	public int addQuote( String message ) throws IllegalStateException,SQLException{
+		String sql = "INSERT INTO quotes(quote) VALUES(?)";
+		PreparedStatement statement = connection.prepareStatement( sql );
+		statement.setString( 1, message );
+		statement.execute();
+		ResultSet rs = statement.getGeneratedKeys();
+		if (rs.next()){
+			return rs.getInt( 1 );
+		}
+		else{
+			throw new IllegalStateException(  );
+		}
+	}
+
+	public String getQuote( int quoteIndex ) throws IllegalStateException,SQLException{
+		String sql = "SELECT * FROM quotes WHERE id = ?";
+		try ( PreparedStatement statement = connection.prepareStatement( sql ) ) {
+			statement.setInt( 1, quoteIndex );
+			ResultSet rs = statement.executeQuery();
+			if ( rs.next() ) {
+				return rs.getString( "quote" );
+			} else {
+				throw new IllegalStateException();
+			}
+		}
+	}
 }
 
 

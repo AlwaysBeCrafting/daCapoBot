@@ -5,6 +5,7 @@ import org.pircbotx.hooks.events.ConnectEvent;
 import org.pircbotx.hooks.events.MessageEvent;
 import org.pircbotx.hooks.events.QuitEvent;
 
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -49,6 +50,40 @@ class BotListener extends ListenerAdapter {
 						.collect( Collectors.toList() );
 			}
 			switch ( matcher.group( 1 ) ) {
+
+				case "!addquote":
+					if ( matcher.group(3) != null ){
+						try {
+							int quoteIndex = DB_INSTANCE.addQuote( matcher.group( 3 ) );
+							event.respondWith( "Quote " + quoteIndex + " added." );
+						}
+						catch( SQLException | IllegalStateException e) {
+							e.printStackTrace();
+							event.respondWith( "DB Error, unable to add quote." );
+						}
+					}
+					break;
+
+				case "!getquote":
+					if ( matcher.group(3) != null ){
+						String quoteString = matcher.group(3).replaceAll( "[^0-9]", "" );
+						if( !"".equals( quoteString )){
+							int quoteIndex = Integer.parseInt( quoteString );
+							try {
+								event.respondWith( DB_INSTANCE.getQuote( quoteIndex ) );
+							}
+							catch (SQLException | IllegalStateException e ){
+								e.printStackTrace();
+								event.respondWith( "DB Error, unable to find quote." );
+							}
+						}
+						else{
+							//TODO placeholder for text search
+							event.respondWith( "Sorry, I didn't see a number in your request." );
+						}
+					}
+					break;
+
 				case "!shutdown":
 					List<String> admins = Arrays.asList( Config.CONFIG.getProperty( "admins" ).toString().split( "," ) );
 					admins.forEach( s -> {
