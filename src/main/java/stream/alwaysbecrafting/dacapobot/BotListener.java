@@ -8,6 +8,7 @@ import org.pircbotx.hooks.events.QuitEvent;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -51,12 +52,14 @@ class BotListener extends ListenerAdapter {
 			switch ( matcher.group( 1 ) ) {
 				case "!shutdown":
 					List<String> admins = Arrays.asList( Config.CONFIG.getProperty( "admins" ).toString().split( "," ) );
-					admins.forEach( s -> {
-						if(s.equals( nick )) {
-							event.respondWith( "Clumsy Robot stopped moving!" );
-							event.getBot().send().quitServer();
-						}});
-					event.respondWith( "I'm sorry " + nick + ", I'm afraid I can't do that." );
+					Optional test = admins.stream().filter( s -> s.equals( nick ) ).findAny();
+
+					if ( test.isPresent() ) {
+						event.respondWith( "Clumsy Robot stopped moving!" );
+						event.getBot().send().quitServer();
+					} else {
+						event.respondWith( "I'm sorry " + nick + ", I'm afraid I can't do that." );
+					}
 					break;
 
 				case "!veto":
