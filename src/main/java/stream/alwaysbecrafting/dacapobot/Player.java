@@ -8,22 +8,24 @@ import javafx.embed.swing.JFXPanel;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 
-import static stream.alwaysbecrafting.dacapobot.Database.DB_INSTANCE;
-
 class Player {
+	private Config config;
+	private Database database;
 	private MediaPlayer player;
 	private long timestamp = System.currentTimeMillis();
 	private Track currentTrack;
 	private Media media;
 
-	Player() {
+	public Player( Config config, Database database ) {
 		JFXPanel jfxPanel = new JFXPanel();
+		this.config = config;
+		this.database = database;
 	}
 
 	void setQueue() {
 		Track nextTrack = null;
 		while(nextTrack == null || !nextTrack.exists()) {
-			nextTrack = DB_INSTANCE.getRandomTrack();
+			nextTrack = database.getRandomTrack();
 			this.currentTrack = nextTrack;
 		}
 		storeTrackTitle( currentTrack.title );
@@ -40,7 +42,7 @@ class Player {
 
 	private void storeTrackTitle( String s ) {
 		try {
-			PrintWriter writer = new PrintWriter( Config.CONFIG.props.getProperty( "live_track_file" ), "UTF-8" );
+			PrintWriter writer = new PrintWriter( config.getTrackFile(), "UTF-8" );
 			writer.println( s );
 			writer.close();
 		} catch ( FileNotFoundException | UnsupportedEncodingException e ) {
@@ -53,13 +55,13 @@ class Player {
 		storeTrackTitle( "" );
 		Track nextTrack = null;
 		while(nextTrack == null || !nextTrack.exists()) {
-			Track requestedTrack = Database.DB_INSTANCE.getNextRequested( timestamp );
+			Track requestedTrack = database.getNextRequested( timestamp );
 			if ( requestedTrack != null ) {
 				timestamp = requestedTrack.timestamp;
 				nextTrack = requestedTrack;
 			} else {
 				timestamp = System.currentTimeMillis();
-				nextTrack = Database.DB_INSTANCE.getRandomTrack();
+				nextTrack = database.getRandomTrack();
 			}
 			if( nextTrack == null || !nextTrack.exists() ) {
 				try {
@@ -79,8 +81,6 @@ class Player {
 	}
 
 	public void stop() {
-		if ( player != null ) {
 			player.stop();
-		}
 	}
 }

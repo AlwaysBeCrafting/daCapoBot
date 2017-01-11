@@ -23,21 +23,12 @@ class Database {
 	//--------------------------------------------------------------------------
 	/* TODO: 12/14/16 in your application, you should probably look at the query
 		 plan for searching by title and short_name because those will be used very often*/
-	static final Database DB_INSTANCE = new Database();
 	private static Connection connection;
+	private static Config config;
 
-	private Database() {
+	public Database( Config config ) {
+		this.config = config;
 		connect();
-	}
-
-	private static String getDBPath() {
-		try {
-			File db = new File( "dacapobot.db" );
-			return db.getCanonicalPath();
-		} catch ( IOException e ) {
-			e.printStackTrace();
-		}
-		return "";
 	}
 
 	private void connect() {
@@ -53,13 +44,13 @@ class Database {
 
 		try {
 			// db parameters
-			String url = "jdbc:sqlite:" + getDBPath() + "?journal_mode=WAL&synchronous=NORMAL&foreign_keys=ON";
+			String url = "jdbc:sqlite:" + new File( config.getDB() ).getCanonicalPath() + "?journal_mode=WAL&synchronous=NORMAL&foreign_keys=ON";
 			// create a connection to the database
 			connection = DriverManager.getConnection( url );
 			System.out.println( "Connection to SQLite has been established." );
 			checkIfTablesExist();
-		} catch ( SQLException e ) {
-			e.printStackTrace();
+		} catch ( SQLException | IOException e ) {
+			throw new RuntimeException( e );
 		}
 	}
 

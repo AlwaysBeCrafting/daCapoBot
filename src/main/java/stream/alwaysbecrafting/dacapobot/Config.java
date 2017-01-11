@@ -1,21 +1,15 @@
 package stream.alwaysbecrafting.dacapobot;
 
-import org.pircbotx.Configuration;
-import org.pircbotx.cap.EnableCapHandler;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
-//==============================================================================
 class Config {
-	public static final Config CONFIG = new Config();
 	public final Properties props;
 	private final List<String> propertiesList = Arrays.asList(
 			"music_directory"
@@ -23,7 +17,9 @@ class Config {
 			,"irc_channel"
 			,"oauth"
 			,"live_track_file"
-			,"admins");
+			,"admins"
+			,"db_path"
+			,"db_name");
 
 
 	Config() {
@@ -58,37 +54,44 @@ class Config {
 		}
 	}
 
-
-	//--------------------------------------------------------------------------
-	Configuration getBotConfig() {
-		//Configure what we want our bot to do
-		Configuration botConfiguration = new Configuration.Builder()
-
-				.setAutoNickChange(false) //Twitch doesn't support multiple users
-				.setOnJoinWhoEnabled(false) //Twitch doesn't support WHO command
-				.setCapEnabled(true)
-				.addCapHandler(new EnableCapHandler("twitch.tv/membership")) //Twitch by default doesn't send JOIN, PART, and NAMES unless you request it, see https://github.com/justintv/Twitch-API/blob/master/IRC.md#membership
-				.setEncoding( StandardCharsets.UTF_8 )
-				.addServer( props.getProperty( "irc_server" )) //Join the network
-				.setName( props.getProperty( "bot_name" ) ) //Set the nick of the bot.
-				.setServerPassword( props.getProperty( "oauth" )) //Your oauth password from http://twitchapps.com/tmi
-				.addAutoJoinChannel( props.getProperty( "irc_channel" ) )
-				.addListener( new BotListener() ) //Add our listener that will be called on Events
-				.buildConfiguration();
-
-		return botConfiguration;
-
-	}
-	//--------------------------------------------------------------------------
-
-	File getMusicDir(){
-		//set the directory where music will be located
+	public File getMusicDir(){
 		return new File( props.getProperty( "music_directory" ) );
 	}
 
+	public String getServer() {
+		return props.getProperty( "irc_server" );
+	}
 
-	public String getProperty( String property ) {
-		return props.getProperty( property ).toString();
+	public String getName() {
+		return props.getProperty( "bot_name" );
+	}
+
+	public String getOauth() {
+		return props.getProperty( "oauth" );
+	}
+
+	public String getChannel() {
+		return 	props.getProperty( "irc_channel" );
+	}
+
+	public String getDBPath() {
+		return props.getProperty( "db_path" );
+	}
+
+	public String getDBName() {
+		return props.getProperty( "db_name" );
+	}
+
+	public String getDB() {
+		return getDBPath() + getDBName();
+	}
+
+	public List<String> getAdmins() {
+		return Arrays.asList( props.getProperty( "admins" ).toString().split( "," ) );
+	}
+
+	public File getTrackFile() {
+		return new File( props.getProperty( "live_track_file" ) );
 	}
 }
 //------------------------------------------------------------------------------

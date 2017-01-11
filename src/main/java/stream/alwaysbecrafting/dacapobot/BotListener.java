@@ -14,20 +14,25 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static stream.alwaysbecrafting.dacapobot.Database.DB_INSTANCE;
-
 //==============================================================================
 class BotListener extends ListenerAdapter {
 	//--------------------------------------------------------------------------
-	private final Player PLAYER = new Player();
 	private final Random RANDOM = new Random();
 	private static final Pattern pattern = Pattern.compile( "^(\\S+)(\\s+(.*))?" );
+	private Config config;
+	private Database database;
+	private Player player;
 
+	public BotListener( Config config, Database database, Player player ) {
+		this.config = config;
+		this.database = database;
+		this.player = player;
+	}
 	@Override
 	public void onQuit( QuitEvent event ) throws Exception{
 		super.onQuit(event);
-		PLAYER.stop();
-		DB_INSTANCE.close();
+		player.stop();
+		database.close();
 	}
 
 	@Override
@@ -36,7 +41,7 @@ class BotListener extends ListenerAdapter {
 		super.onMessage( event );
 
 		if ( event.getUser().getNick() != null ) {
-			Database.DB_INSTANCE.logChat( event.getUser().getNick(), event.getMessage() );
+			database.logChat( event.getUser().getNick(), event.getMessage() );
 		}
 
 		String nick = event.getUser().getNick();
@@ -51,12 +56,11 @@ class BotListener extends ListenerAdapter {
 			}
 			switch ( matcher.group( 1 ) ) {
 				case "!shutdown":
-					List<String> admins = Arrays.asList( Config.CONFIG.getProperty( "admins" ).toString().split( "," ) );
-					Optional test = admins.stream().filter( s -> s.equals( nick ) ).findAny();
-
-					if ( test.isPresent() ) {
+					Optional isAdmin = config.getAdmins().stream().filter( s -> s.equals( nick ) ).findAny();
+					if ( isAdmin.isPresent() ) {
 						event.respondWith( "Clumsy Robot stopped moving!" );
 						event.getBot().send().quitServer();
+
 					} else {
 						event.respondWith( "I'm sorry " + nick + ", I'm afraid I can't do that." );
 					}
@@ -71,15 +75,15 @@ class BotListener extends ListenerAdapter {
 						else if (matcherArgs.get(0).toLowerCase().matches( "[remix]{1,5}" )){
 							event.respondWith( "Illegal first argument " + matcherArgs.get(0) + " too similar to 'remix'" );
 						}
-						else if ( PLAYER.getCurrentTitle()
+						else if ( player.getCurrentTitle()
 								.toLowerCase()
 								.replaceAll( "[^a-z0-9]+", "%" )
 								.contains( ( matcher.group(3).replaceAll( "[^a-z0-9]+", "%" ) ) ) ) {
-							DB_INSTANCE.addVeto( nick, PLAYER.getCurrentTitle() );
-							event.respondWith( PLAYER.getCurrentTitle() + " vetoed, thank you." );
-							PLAYER.nextTrack();
+							database.addVeto( nick, player.getCurrentTitle() );
+							event.respondWith( player.getCurrentTitle() + " vetoed, thank you." );
+							player.nextTrack();
 						} else {
-							List<Track> trackList = DB_INSTANCE.addVeto( nick, ( matcherArgs.toString() ) );
+							List<Track> trackList = database.addVeto( nick, ( matcherArgs.toString() ) );
 
 							if ( trackList.isEmpty() ) {
 								event.respondWith( "Sorry, I couldn't find any tracks containing " + matcher.group( 2 ) );
@@ -126,7 +130,7 @@ class BotListener extends ListenerAdapter {
 							}
 						}
 
-						List<Track> matchingTracks = DB_INSTANCE.addRequest( nick, randomRequest);
+						List<Track> matchingTracks = database.addRequest( nick, randomRequest);
 						if ( matchingTracks.isEmpty() ) {
 							event.respondWith( "Sorry, I couldn't find any tracks containing " + matcher.group(3).replaceAll( "--random ", "" ));
 						}
@@ -135,13 +139,13 @@ class BotListener extends ListenerAdapter {
 						}
 						if ( matchingTracks.size() > 1 ) {
 							int randomTrack = RANDOM.nextInt(matchingTracks.size());
-							DB_INSTANCE.addRequest( nick, matchingTracks.get(randomTrack).title );
+							database.addRequest( nick, matchingTracks.get(randomTrack).title );
 							event.respondWith( matchingTracks.get(randomTrack).title + " added to the queue.");
 						}
 					}
 					else if ( nick != null && matcher.group( 3 ) != null ) {
-						Track lastInRequest = DB_INSTANCE.getFinalFromRequests();
-						List<Track> matchingTracks = DB_INSTANCE.addRequest( nick, matcher.group(3).toString() );
+						Track lastInRequest = database.getFinalFromRequests();
+						List<Track> matchingTracks = database.addRequest( nick, matcher.group(3).toString() );
 
 						if ( matchingTracks.isEmpty() ) {
 							event.respondWith( "Sorry, I couldn't find any tracks containing " + matcher.group(3));
@@ -222,10 +226,10 @@ class BotListener extends ListenerAdapter {
 	public void onConnect( ConnectEvent event ) throws Exception {
 		super.onConnect( event );
 		try {
-			Database.DB_INSTANCE.addMP3s( new Config().getMusicDir() );
+			database.addMP3s( new Config().getMusicDir() );
 
-			this.PLAYER.setQueue();
-			this.PLAYER.play();
+			player.setQueue();
+			player.play();
 		} catch ( Exception e ) {e.printStackTrace();}
 	}
 
