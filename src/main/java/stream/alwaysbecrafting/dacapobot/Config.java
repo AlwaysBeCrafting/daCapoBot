@@ -15,6 +15,7 @@ class Config {
 			"music_directory"
 			,"bot_name"
 			,"irc_channel"
+			,"irc_server"
 			,"oauth"
 			,"live_track_file"
 			,"admins"

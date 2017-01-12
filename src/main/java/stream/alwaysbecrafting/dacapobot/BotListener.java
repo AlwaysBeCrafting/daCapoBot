@@ -2,8 +2,8 @@ package stream.alwaysbecrafting.dacapobot;
 
 import org.pircbotx.hooks.ListenerAdapter;
 import org.pircbotx.hooks.events.ConnectEvent;
+import org.pircbotx.hooks.events.DisconnectEvent;
 import org.pircbotx.hooks.events.MessageEvent;
-import org.pircbotx.hooks.events.QuitEvent;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -29,17 +29,12 @@ class BotListener extends ListenerAdapter {
 		this.player = player;
 	}
 	@Override
-	public void onQuit( QuitEvent event ) throws Exception{
-		super.onQuit(event);
-		player.stop();
-		database.close();
+	public void onDisconnect( DisconnectEvent event ) throws Exception{
+		event.getBot().close();
 	}
 
 	@Override
 	public void onMessage( MessageEvent event ) throws Exception {
-
-		super.onMessage( event );
-
 		if ( event.getUser().getNick() != null ) {
 			database.logChat( event.getUser().getNick(), event.getMessage() );
 		}
@@ -59,8 +54,9 @@ class BotListener extends ListenerAdapter {
 					Optional isAdmin = config.getAdmins().stream().filter( s -> s.equals( nick ) ).findAny();
 					if ( isAdmin.isPresent() ) {
 						event.respondWith( "Clumsy Robot stopped moving!" );
+						player.exit();
+						database.close();
 						event.getBot().send().quitServer();
-
 					} else {
 						event.respondWith( "I'm sorry " + nick + ", I'm afraid I can't do that." );
 					}
@@ -224,15 +220,9 @@ class BotListener extends ListenerAdapter {
 
 	@Override
 	public void onConnect( ConnectEvent event ) throws Exception {
-		super.onConnect( event );
-		try {
-			database.addMP3s( new Config().getMusicDir() );
+		database.addMP3s( new Config().getMusicDir() );
 
-			player.setQueue();
-			player.play();
-		} catch ( Exception e ) {e.printStackTrace();}
+		player.setQueue();
+		player.play();
 	}
-
-	//--------------------------------------------------------------------------
 }
-//------------------------------------------------------------------------------

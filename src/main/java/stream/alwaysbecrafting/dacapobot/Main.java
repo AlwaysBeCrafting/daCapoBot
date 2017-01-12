@@ -30,5 +30,6 @@ public class Main{
 
 		PircBotX bot = new PircBotX( botConfiguration );
 		bot.startBot();
+
 	}
 }

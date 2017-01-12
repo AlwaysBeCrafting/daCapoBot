@@ -4,6 +4,7 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 
+import javafx.application.Platform;
 import javafx.embed.swing.JFXPanel;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
@@ -81,6 +82,11 @@ class Player {
 	}
 
 	public void stop() {
-			player.stop();
+		player.stop();
+	}
+
+	public void exit() {
+		stop();
+		Platform.exit();
 	}
 }
