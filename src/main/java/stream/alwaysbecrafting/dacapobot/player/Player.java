@@ -87,6 +87,7 @@ class Player {
 
 	public void exit() {
 		stop();
+		storeTrackTitle( "" );
 		Platform.exit();
 	}
 }
