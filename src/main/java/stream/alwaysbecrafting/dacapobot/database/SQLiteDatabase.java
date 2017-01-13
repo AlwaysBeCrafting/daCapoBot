@@ -1,4 +1,4 @@
-package stream.alwaysbecrafting.dacapobot;
+package stream.alwaysbecrafting.dacapobot.database;
 
 import java.io.File;
 import java.io.IOException;
@@ -16,17 +16,16 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.stream.Collectors;
 
+import stream.alwaysbecrafting.dacapobot.Config;
+import stream.alwaysbecrafting.dacapobot.Track;
+
 import static java.lang.System.currentTimeMillis;
 
-//==============================================================================
-class Database {
-	//--------------------------------------------------------------------------
-	/* TODO: 12/14/16 in your application, you should probably look at the query
-		 plan for searching by title and short_name because those will be used very often*/
+public class SQLiteDatabase implements Database {
 	private static Connection connection;
 	private static Config config;
 
-	public Database( Config config ) {
+	public SQLiteDatabase( Config config ) {
 		this.config = config;
 		connect();
 	}
@@ -87,7 +86,7 @@ class Database {
 		System.out.println( "Done." );
 	}
 
-	void addMP3s( File dir ) {
+	public void addMP3s( File dir ) {
 
 		System.out.println( "Checking for tracks to insert..." );
 		List<Track> tracks = Collections.emptyList();
@@ -100,28 +99,20 @@ class Database {
 		} catch ( Exception e ) {
 			e.printStackTrace();
 		}
-
 		List<String> pathsFromDB = new ArrayList<>();
-
 		String select = "SELECT path FROM tracks";
 		try ( Statement stmt = connection.createStatement() ) {
 			ResultSet rs = stmt.executeQuery( select );
-
-			// loop through the result set
 			while ( rs.next() ) {
 				pathsFromDB.add( rs.getString( "path" ) );
 			}
-
 		} catch ( Exception e ) {
 			e.printStackTrace();
 		}
-
 		List<Track> tracksToInsert = tracks
 				.stream()
 				.filter( track -> !pathsFromDB.contains( track.getCanonicalPath() ) )
 				.collect( Collectors.toList() );
-
-
 		tracksToInsert.parallelStream().forEach( Track::fetchTrackData );
 
 		try {
@@ -133,10 +124,10 @@ class Database {
 		try ( PreparedStatement statement = connection.prepareStatement( sql ) ) {
 			tracksToInsert.forEach( track -> {
 				try {
-					statement.setString( 1, track.title );
-					statement.setString( 2, track.file.getCanonicalPath() );
-					statement.setString( 3, track.artist );
-					statement.setString( 4, track.album );
+					statement.setString( 1, track.getTitle() );
+					statement.setString( 2, track.getFile().getCanonicalPath() );
+					statement.setString( 3, track.getArtist() );
+					statement.setString( 4, track.getAlbum() );
 					statement.executeUpdate();
 				} catch ( Exception e ) {
 					e.printStackTrace();
@@ -155,9 +146,9 @@ class Database {
 		}
 	}
 
-	void logChat( String user, String message ) {
+	public void logChat( String user, String message ) {
 		String sql = "INSERT INTO chat_log(timestamp,user,message) VALUES(?,?,?)";
-		try ( PreparedStatement statement = connection.prepareStatement( sql ); ) {
+		try ( PreparedStatement statement = connection.prepareStatement( sql ) ) {
 			statement.setLong( 1, currentTimeMillis() );
 			statement.setString( 2, user.toString() );
 			statement.setString( 3, message );
@@ -167,7 +158,7 @@ class Database {
 		}
 	}
 
-	Track getFinalFromRequests() {
+	public Track getFinalFromRequests() {
 		String select = "SELECT * FROM requests ORDER BY id DESC LIMIT 1";
 		try ( PreparedStatement statement = connection.prepareStatement( select ) ) {
 			ResultSet rs1 = statement.executeQuery();
@@ -178,12 +169,12 @@ class Database {
 			try ( PreparedStatement statement2 = connection.prepareStatement( select2 ) ) {
 				statement2.setInt( 1, rs1.getInt( "track_id" ) );
 				ResultSet rs2 = statement2.executeQuery();
-				Track temp = new Track( new File( rs2.getString( "path" ) ) );
-				temp.id = rs2.getInt( "id" );
-				temp.title = rs2.getString( "title" );
-				temp.artist = rs2.getString( "artist" );
-				temp.album = rs2.getString( "album" );
-				return temp;
+				Track track = new Track( new File( rs2.getString( "path" ) ) );
+				track.setId( rs2.getInt( "id" ) );
+				track.setTitle( rs2.getString( "title" ) );
+				track.setArtist( rs2.getString( "artist" ) );
+				track.setAlbum( rs2.getString( "album" ) );
+				return track;
 
 			}
 		} catch ( SQLException e ) {
@@ -192,15 +183,15 @@ class Database {
 		return null;
 	}
 
-	List<Track> addRequest( String user, final String request ) {
+	public List<Track> addRequest( String user, final String request ) {
 		List<Track> matchingTracks = getMatchingTracks( request );
 
-		if (matchingTracks.size() == 1 && !matchingTracks.get( 0 ).title.equalsIgnoreCase( getFinalFromRequests().title ) ) {
+		if (matchingTracks.size() == 1 && !matchingTracks.get( 0 ).getTitle().equalsIgnoreCase( getFinalFromRequests().getTitle() ) ) {
 			String insertRequest = "INSERT INTO requests(timestamp, user, track_id) VALUES(?,?,?)";
 			try ( PreparedStatement statement = connection.prepareStatement( insertRequest ) ) {
 				statement.setLong( 1, System.currentTimeMillis() );
 				statement.setString( 2, user );
-				statement.setInt( 3, matchingTracks.get( 0 ).id );
+				statement.setInt( 3, matchingTracks.get( 0 ).getId() );
 				statement.execute();
 			} catch ( Exception e ) {
 				e.printStackTrace();
@@ -209,7 +200,7 @@ class Database {
 		return matchingTracks;
 	}
 
-	List<Track> addVeto( String user, final String request ) {
+	public List<Track> addVeto( String user, final String request ) {
 		List<Track> matchingTracks = getMatchingTracks( request );
 
 		if(matchingTracks.size() == 1) {
@@ -217,7 +208,7 @@ class Database {
 			try ( PreparedStatement statement = connection.prepareStatement( insertRequest ) ) {
 				statement.setLong( 1, System.currentTimeMillis() );
 				statement.setString( 2, user );
-				statement.setInt( 3, matchingTracks.get( 0 ).id );
+				statement.setInt( 3, matchingTracks.get( 0 ).getId() );
 				statement.execute();
 			} catch ( Exception e ) {
 				e.printStackTrace();
@@ -234,22 +225,21 @@ class Database {
 			statement.setString( 1, "%" + formattedRequest + "%" );
 			ResultSet rs = statement.executeQuery();
 			while ( rs.next() ) {
-				Track temp = new Track( new File( rs.getString( "path" ) ) );
-				if(!temp.exists()) {
+				Track track = new Track( new File( rs.getString( "path" ) ) );
+				if(!track.exists()) {
 					continue;
 				}
-				temp.id = rs.getInt( "id" );
-				temp.title = rs.getString( "title" );
-				temp.artist = rs.getString( "artist" );
-				temp.album = rs.getString( "album" );
-				tracks.add( temp );
+				track.setId( rs.getInt( "id" ) );
+				track.setTitle( rs.getString( "title" ) );
+				track.setArtist( rs.getString( "artist" ) );
+				track.setAlbum( rs.getString( "album" ) );
+				tracks.add( track );
 			}
 		} catch ( SQLException e ) {
 			e.printStackTrace();
 		}
 		return tracks;
 	}
-
 
 	public Track getNextRequested( long timestamp ) {
 		String nextRequestSql = "SELECT * FROM requests WHERE timestamp > ? limit 1";
@@ -263,13 +253,13 @@ class Database {
 			try ( PreparedStatement trackSql = connection.prepareStatement( getTrackData ) ) {
 				trackSql.setInt( 1, requestSqlResults.getInt( "track_id" ) );
 				ResultSet trackData = trackSql.executeQuery();
-				Track temp = new Track( new File( trackData.getString( "path" ) ) );
-				temp.id = trackData.getInt( "id" );
-				temp.timestamp = requestSqlResults.getLong( "timestamp" );
-				temp.title = trackData.getString( "title" );
-				temp.artist = trackData.getString( "artist" );
-				temp.album = trackData.getString( "album" );
-				return temp;
+				Track track = new Track( new File( trackData.getString( "path" ) ) );
+				track.setId( trackData.getInt( "id" ) );
+				track.setTimestamp( requestSqlResults.getLong( "timestamp" ) );
+				track.setTitle( trackData.getString( "title" ) );
+				track.setArtist( trackData.getString( "artist" ) );
+				track.setAlbum( trackData.getString( "album" ) );
+				return track;
 			}
 		} catch ( SQLException e ) {
 			e.printStackTrace();
@@ -277,18 +267,16 @@ class Database {
 		return null;
 	}
 
-//------------------------------------------------------------------------------
-
-	Track getRandomTrack() {
+	public Track getRandomTrack() {
 		Track track = null;
 		String sql = "SELECT * FROM tracks WHERE id IN (SELECT id FROM tracks ORDER BY RANDOM() LIMIT 1)";
 		try ( PreparedStatement statement = connection.prepareStatement( sql ) ) {
 			ResultSet rs = statement.executeQuery();
 			track = new Track( new File( rs.getString( "path" ) ) );
-			track.id = rs.getInt( "id" );
-			track.title = rs.getString( "title" );
-			track.artist = rs.getString( "artist" );
-			track.album = rs.getString( "album" );
+			track.setId( rs.getInt( "id" ) );
+			track.setTitle( rs.getString( "title" ) );
+			track.setArtist( rs.getString( "artist" ) );
+			track.setAlbum( rs.getString( "album" ) );
 			return track;
 		} catch ( Exception e ) {
 			e.printStackTrace();

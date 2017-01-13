@@ -14,6 +14,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import stream.alwaysbecrafting.dacapobot.database.Database;
+import stream.alwaysbecrafting.dacapobot.player.Player;
+
 //==============================================================================
 class BotListener extends ListenerAdapter {
 	//--------------------------------------------------------------------------
@@ -28,6 +31,7 @@ class BotListener extends ListenerAdapter {
 		this.database = database;
 		this.player = player;
 	}
+
 	@Override
 	public void onDisconnect( DisconnectEvent event ) throws Exception{
 		event.getBot().close();

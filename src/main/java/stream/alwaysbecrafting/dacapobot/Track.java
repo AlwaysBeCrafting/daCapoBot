@@ -7,9 +7,7 @@ import com.mpatric.mp3agic.Mp3File;
 import java.io.File;
 import java.io.IOException;
 
-//==============================================================================
-class Track {
-	//--------------------------------------------------------------------------
+public class Track {
 	int id;
 	long timestamp;
 	String title;
@@ -17,21 +15,15 @@ class Track {
 	String artist;
 	String album;
 
-	//--------------------------------------------------------------------------
-
-	Track( File track ) {
+	public Track( File track ) {
 		this.file = track;
 	}
 
-	//--------------------------------------------------------------------------
-
-	String toURIString() {
+	public String toURIString() {
 		return this.file.toURI().toString();
 	}
 
-	//--------------------------------------------------------------------------
-
-	String getCanonicalPath() {
+	public String getCanonicalPath() {
 		try {
 			return this.file.getCanonicalPath();
 		} catch ( IOException e ) {
@@ -40,8 +32,7 @@ class Track {
 		return "";
 	}
 
-
-	boolean fetchTrackData() {
+	public boolean fetchTrackData() {
 		try {
 			Mp3File mp3file = new Mp3File( this.file );
 
@@ -77,6 +68,54 @@ class Track {
 			+ " " + this.artist
 			+ " " + this.album;
 
+	}
+
+	public int getId() {
+		return this.id;
+	}
+
+	public long getTimestamp() {
+		return this.timestamp;
+	}
+
+	public String getTitle() {
+		return this.title;
+	}
+
+	public File getFile() {
+		return this.file;
+	}
+
+	public String getArtist() {
+		return this.artist;
+	}
+
+	public String getAlbum() {
+		return this.album;
+	}
+
+	public void setId( int id ) {
+		this.id = id;
+	}
+
+	public void setTimestamp( long timestamp ) {
+		this.timestamp = timestamp;
+	}
+
+	public void setFile( File file ) {
+		this.file = file;
+	}
+
+	public void setTitle( String title ) {
+		this.title = title;
+	}
+
+	public void setArtist( String artist ) {
+		this.artist = artist;
+	}
+
+	public void setAlbum( String album ) {
+		this.album = album;
 	}
 }
 

@@ -9,7 +9,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
-class Config {
+public class Config {
 	public final Properties props;
 	private final List<String> propertiesList = Arrays.asList(
 			"music_directory"
@@ -23,7 +23,7 @@ class Config {
 			,"db_name");
 
 
-	Config() {
+	public Config() {
 		props = new Properties();
 		try {
 			File file = new File("dacapobot.properties");
@@ -95,4 +95,3 @@ class Config {
 		return new File( props.getProperty( "live_track_file" ) );
 	}
 }
-//------------------------------------------------------------------------------
