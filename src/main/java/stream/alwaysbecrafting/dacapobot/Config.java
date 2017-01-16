@@ -38,7 +38,7 @@ public class Config {
 					props.setProperty( "admins", "#,#" );
 					props.store( output, null );
 				}
-				System.err.println( "Error: Properties file not exist " + file.getCanonicalPath() + "\n\t\tCreating, please edit before next run." );
+				System.err.println( "Error: Properties path not exist " + file.getCanonicalPath() + "\n\t\tCreating, please edit before next run." );
 				System.exit( 0 );
 			} else {
 				try ( InputStream input = new FileInputStream( file ) ) {

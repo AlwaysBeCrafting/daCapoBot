@@ -9,7 +9,7 @@ import javafx.embed.swing.JFXPanel;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import stream.alwaysbecrafting.dacapobot.Config;
-import stream.alwaysbecrafting.dacapobot.Track;
+import stream.alwaysbecrafting.dacapobot.TrackData;
 import stream.alwaysbecrafting.dacapobot.database.Database;
 
 public class JfxPlayer implements Player{
@@ -17,7 +17,7 @@ public class JfxPlayer implements Player{
 	private Database database;
 	private MediaPlayer player;
 	private long timestamp = System.currentTimeMillis();
-	private Track currentTrack;
+	private TrackData currentTrack;
 	private Media media;
 
 	public JfxPlayer( Config config, Database database ) {
@@ -27,7 +27,7 @@ public class JfxPlayer implements Player{
 	}
 
 	public void setQueue() {
-		Track nextTrack = null;
+		TrackData nextTrack = null;
 		while(nextTrack == null || !nextTrack.exists()) {
 			nextTrack = database.getRandomTrack();
 			this.currentTrack = nextTrack;
@@ -36,7 +36,6 @@ public class JfxPlayer implements Player{
 	}
 
 	public void play() {
-		currentTrack.fetchTrackData();
 		media = new Media( currentTrack.toURIString() );
 		player = new MediaPlayer( media );
 		player.setOnEndOfMedia( () -> nextTrack() );
@@ -57,9 +56,9 @@ public class JfxPlayer implements Player{
 	public void nextTrack() {
 		stop();
 		storeTrackTitle( "" );
-		Track nextTrack = null;
+		TrackData nextTrack = null;
 		while(nextTrack == null || !nextTrack.exists()) {
-			Track requestedTrack = database.getNextRequested( timestamp );
+			TrackData requestedTrack = database.getNextRequested( timestamp );
 			if ( requestedTrack != null ) {
 				timestamp = requestedTrack.getTimestamp();
 				nextTrack = requestedTrack;
