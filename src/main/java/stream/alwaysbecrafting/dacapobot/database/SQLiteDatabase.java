@@ -18,7 +18,7 @@ import java.util.Scanner;
 import java.util.Set;
 
 import stream.alwaysbecrafting.dacapobot.Config;
-import stream.alwaysbecrafting.dacapobot.TrackData;
+import stream.alwaysbecrafting.dacapobot.TrackData.TrackMetadata;
 import stream.alwaysbecrafting.dacapobot.bot.commands.Mp3Parser;
 import stream.alwaysbecrafting.dacapobot.bot.commands.Parser;
 
@@ -42,13 +42,9 @@ public class SQLiteDatabase implements Database {
 				e.printStackTrace();
 			}
 		}
-
 		connection = null;
-
 		try {
-			// db parameters
 			String url = "jdbc:sqlite:" + new File( config.getDB() ).getCanonicalPath() + "?journal_mode=WAL&synchronous=NORMAL&foreign_keys=ON";
-			// create a connection to the database
 			connection = DriverManager.getConnection( url );
 			System.out.println( "Connection to SQLite has been established." );
 			checkIfTablesExist();
@@ -59,12 +55,10 @@ public class SQLiteDatabase implements Database {
 
 	private void checkIfTablesExist() {
 		System.out.println( "Validating SQL schema..." );
-
 		List<String> sqlList = new ArrayList<>();
 		try(Scanner scanner = new Scanner( ClassLoader.getSystemResourceAsStream( "schema.sql" ))){
 			String scannedLine;
 			scanner.useDelimiter( ";" );
-
 			while( scanner.hasNext() ){
 				scannedLine = scanner.next();
 				if(!scannedLine.matches( "\\s*" )) {
@@ -72,7 +66,6 @@ public class SQLiteDatabase implements Database {
 				}
 			}
 		}
-
 		try ( Statement stmt = connection.createStatement() ) {
 			//noinspection SimplifyStreamApiCallChains
 			sqlList.stream().forEachOrdered( sql -> {
@@ -82,11 +75,9 @@ public class SQLiteDatabase implements Database {
 					e.printStackTrace();
 				}
 			});
-
 		} catch ( SQLException e ) {
 			e.printStackTrace();
 		}
-
 		System.out.println( "Done." );
 	}
 
@@ -94,15 +85,15 @@ public class SQLiteDatabase implements Database {
 		System.out.println( "Checking for tracks to insert ...");
 		Set<String> pathsFromDB = new HashSet<>();
 		String tracksPathColumn = "SELECT path FROM tracks";
-		Statement statement = connection.createStatement();
-		ResultSet resultSet = statement.executeQuery( tracksPathColumn );
-		while( resultSet.next() ) {
-			pathsFromDB.add( resultSet.getString( "path" ) );
+		try( Statement statement = connection.createStatement() ) {
+			ResultSet resultSet = statement.executeQuery( tracksPathColumn );
+			while ( resultSet.next() ) {
+				pathsFromDB.add( resultSet.getString( "path" ) );
+			}
 		}
-		statement.close();
-		List<TrackData> tracksToInsert = Files.walk( dir.toPath(), FileVisitOption.FOLLOW_LINKS )
+		List<TrackMetadata> tracksToInsert = Files.walk( dir.toPath(), FileVisitOption.FOLLOW_LINKS )
 				.filter( path -> path.toString().endsWith( ".mp3" ))
-				.filter( path -> !pathsFromDB.contains( path ) )
+				.filter( path -> !pathsFromDB.contains( path.toString() ) )
 				.parallel()
 				.collect(
 						ArrayList::new,
@@ -111,18 +102,19 @@ public class SQLiteDatabase implements Database {
 				);
 		connection.setAutoCommit( false );
 		String insertIntoTracks = "INSERT INTO tracks(title,path,artist,album) VALUES(?,?,?,?)";
-		PreparedStatement preparedStatement = connection.prepareStatement( insertIntoTracks );
-		tracksToInsert.forEach( track -> {
-			try {
-				preparedStatement.setString( 1, track.getTitle() );
-				preparedStatement.setString( 2, track.getPath().toString() );
-				preparedStatement.setString( 3, track.getArtist() );
-				preparedStatement.setString( 4, track.getAlbum() );
-				preparedStatement.executeUpdate();
-			} catch ( Exception e ) {
-				e.printStackTrace();
-			}
-		} );
+		try( PreparedStatement preparedStatement = connection.prepareStatement( insertIntoTracks ) ) {
+			tracksToInsert.forEach( track -> {
+				try {
+					preparedStatement.setString( 1, track.title );
+					preparedStatement.setString( 2, track.path.toString() );
+					preparedStatement.setString( 3, track.artist );
+					preparedStatement.setString( 4, track.album );
+					preparedStatement.executeUpdate();
+				} catch ( Exception e ) {
+					e.printStackTrace();
+				}
+			} );
+		}
 		connection.commit();
 		System.out.println( "Added " + tracksToInsert.size() + " tracks to the database." );
 		connection.setAutoCommit( true );
@@ -140,41 +132,35 @@ public class SQLiteDatabase implements Database {
 		}
 	}
 
-	public TrackData getFinalFromRequests() {
-		String select = "SELECT * FROM requests ORDER BY id DESC LIMIT 1";
+	public TrackMetadata getFinalFromRequests() {
+		String select = "SELECT t.path, t.title, t.artist, t.album, t.id " +
+				"FROM tracks as t " +
+				"INNER JOIN requests as r ON t.id = r.track_id " +
+				"ORDER BY r.id DESC LIMIT 1";
 		try ( PreparedStatement statement = connection.prepareStatement( select ) ) {
-			ResultSet rs1 = statement.executeQuery();
-			if ( rs1.isClosed() ) {
-				return null;
-			}
-			String select2 = "SELECT * FROM tracks WHERE id LIKE ?";
-			try ( PreparedStatement statement2 = connection.prepareStatement( select2 ) ) {
-				statement2.setInt( 1, rs1.getInt( "track_id" ) );
-				ResultSet rs2 = statement2.executeQuery();
-				TrackData track = new TrackData(
-						Paths.get( rs2.getString( "path" ) ),
-						rs2.getString( "title" ),
-						rs2.getString( "artist" ),
-						rs2.getString( "album" ) );
-				track.setId( rs2.getInt( "id" ) );
-				return track;
-
-			}
+			ResultSet resultSet = statement.executeQuery();
+			TrackMetadata track = new TrackMetadata(
+					Paths.get( resultSet.getString( "path" ) ),
+					resultSet.getString( "title" ),
+					resultSet.getString( "artist" ),
+					resultSet.getString( "album" ) );
+			track.setId( resultSet.getInt( "id" ) );
+			return track;
 		} catch ( SQLException e ) {
 			e.printStackTrace();
 		}
 		return null;
 	}
 
-	public List<TrackData> addRequest( String user, final String request ) {
-		List<TrackData> matchingTracks = getMatchingTracks( request );
+	public List<TrackMetadata> addRequest( String user, final String request ) {
+		List<TrackMetadata> matchingTracks = getMatchingTracks( request );
 
-		if (matchingTracks.size() == 1 && !matchingTracks.get( 0 ).getTitle().equalsIgnoreCase( getFinalFromRequests().getTitle() ) ) {
+		if (matchingTracks.size() == 1 && !matchingTracks.get( 0 ).title.equalsIgnoreCase( getFinalFromRequests().title ) ) {
 			String insertRequest = "INSERT INTO requests(timestamp, user, track_id) VALUES(?,?,?)";
 			try ( PreparedStatement statement = connection.prepareStatement( insertRequest ) ) {
 				statement.setLong( 1, System.currentTimeMillis() );
 				statement.setString( 2, user );
-				statement.setInt( 3, matchingTracks.get( 0 ).getId() );
+				statement.setInt( 3, matchingTracks.get( 0 ).id );
 				statement.execute();
 			} catch ( Exception e ) {
 				e.printStackTrace();
@@ -183,15 +169,15 @@ public class SQLiteDatabase implements Database {
 		return matchingTracks;
 	}
 
-	public List<TrackData> addVeto( String user, final String request ) {
-		List<TrackData> matchingTracks = getMatchingTracks( request );
+	public List<TrackMetadata> addVeto( String user, final String request ) {
+		List<TrackMetadata> matchingTracks = getMatchingTracks( request );
 
 		if(matchingTracks.size() == 1) {
 			String insertRequest = "INSERT INTO vetoes(timestamp, user, track_id) VALUES(?,?,?)";
 			try ( PreparedStatement statement = connection.prepareStatement( insertRequest ) ) {
 				statement.setLong( 1, System.currentTimeMillis() );
 				statement.setString( 2, user );
-				statement.setInt( 3, matchingTracks.get( 0 ).getId() );
+				statement.setInt( 3, matchingTracks.get( 0 ).id );
 				statement.execute();
 			} catch ( Exception e ) {
 				e.printStackTrace();
@@ -200,20 +186,20 @@ public class SQLiteDatabase implements Database {
 		return matchingTracks;
 	}
 
-	List<TrackData> getMatchingTracks( String request ) {
-		List<TrackData> tracks = new ArrayList<>();
+	List<TrackMetadata> getMatchingTracks( String request ) {
+		List<TrackMetadata> tracks = new ArrayList<>();
 		String formattedRequest = request.replaceAll( "[\\W_]+", "%" );
 		try ( PreparedStatement statement = connection.prepareStatement(
 				"SELECT * FROM tracks WHERE title LIKE ?") ) {
 			statement.setString( 1, "%" + formattedRequest + "%" );
 			ResultSet rs = statement.executeQuery();
 			while ( rs.next() ) {
-				TrackData track = new TrackData(
+				TrackMetadata track = new TrackMetadata(
 						Paths.get( rs.getString( "path" ) ),
 						rs.getString( "title" ),
 						rs.getString( "artist" ),
 						rs.getString( "album" ) );
-				if(!track.exists()) {
+				if(!Files.exists( track.path )) {
 					continue;
 				}
 				track.setId( rs.getInt( "id" ) );
@@ -225,26 +211,23 @@ public class SQLiteDatabase implements Database {
 		return tracks;
 	}
 
-	public TrackData getNextRequested( long timestamp ) {
-		String nextRequestSql = "SELECT * FROM requests WHERE timestamp > ? limit 1";
+	public TrackMetadata getNextRequested( long timestamp ) {
+		String nextRequestSql = "SELECT t.id, r.timestamp, t.title, t.album, t.artist, t.path " +
+				"FROM tracks AS t " +
+				"INNER JOIN requests AS r " +
+				"ON t.id = r.track_id WHERE r.timestamp > ? limit 1";
 		try ( PreparedStatement requestSql = connection.prepareStatement( nextRequestSql ) ) {
 			requestSql.setLong( 1, timestamp );
-			ResultSet requestSqlResults = requestSql.executeQuery();
-			if ( requestSqlResults.isClosed() ) {
-				return null;
-			}
-			String getTrackData = "SELECT * FROM tracks WHERE id = ?";
-			try ( PreparedStatement trackSql = connection.prepareStatement( getTrackData ) ) {
-				trackSql.setInt( 1, requestSqlResults.getInt( "track_id" ) );
-				ResultSet trackData = trackSql.executeQuery();
-				TrackData track = new TrackData(
-						Paths.get( trackData.getString( "path" ) ),
-						trackData.getString( "title" ),
-						trackData.getString( "artist" ),
-						trackData.getString( "album" )  );
-				track.setId( trackData.getInt( "id" ) );
-				track.setTimestamp( requestSqlResults.getLong( "timestamp" ) );
-				return track;
+			ResultSet trackData = requestSql.executeQuery();
+			while( trackData.next() ) {
+				TrackMetadata track = new TrackMetadata(
+					Paths.get( trackData.getString( "t.path" ) ),
+					trackData.getString( "t.title" ),
+					trackData.getString( "t.artist" ),
+					trackData.getString( "t.album" )  );
+			track.setId( trackData.getInt( "t.id" ) );
+			track.setTimestamp( trackData.getLong( "r.timestamp" ) );
+			return track;
 			}
 		} catch ( SQLException e ) {
 			e.printStackTrace();
@@ -252,12 +235,12 @@ public class SQLiteDatabase implements Database {
 		return null;
 	}
 
-	public TrackData getRandomTrack() {
-		TrackData track = null;
+	public TrackMetadata getRandomTrack() {
+		TrackMetadata track = null;
 		String sql = "SELECT * FROM tracks WHERE id IN (SELECT id FROM tracks ORDER BY RANDOM() LIMIT 1)";
 		try ( PreparedStatement statement = connection.prepareStatement( sql ) ) {
 			ResultSet rs = statement.executeQuery();
-			track = new TrackData(
+			track = new TrackMetadata(
 					Paths.get( rs.getString( "path" ) ),
 					rs.getString( "title" ),
 					rs.getString( "artist" ),

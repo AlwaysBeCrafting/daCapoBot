@@ -1,7 +1,6 @@
 package stream.alwaysbecrafting.dacapobot.bot;
 
 import org.pircbotx.hooks.ListenerAdapter;
-import org.pircbotx.hooks.events.ConnectEvent;
 import org.pircbotx.hooks.events.DisconnectEvent;
 import org.pircbotx.hooks.events.MessageEvent;
 
@@ -15,7 +14,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import stream.alwaysbecrafting.dacapobot.Config;
-import stream.alwaysbecrafting.dacapobot.TrackData;
+import stream.alwaysbecrafting.dacapobot.TrackData.TrackMetadata;
 import stream.alwaysbecrafting.dacapobot.database.Database;
 import stream.alwaysbecrafting.dacapobot.player.Player;
 
@@ -85,7 +84,7 @@ public class BotListener extends ListenerAdapter {
 							event.respondWith( player.getCurrentTitle() + " vetoed, thank you." );
 							player.nextTrack();
 						} else {
-							List<TrackData> trackList = database.addVeto( nick, ( matcherArgs.toString() ) );
+							List<TrackMetadata> trackList = database.addVeto( nick, ( matcherArgs.toString() ) );
 
 							if ( trackList.isEmpty() ) {
 								event.respondWith( "Sorry, I couldn't find any tracks containing " + matcher.group( 2 ) );
@@ -94,9 +93,9 @@ public class BotListener extends ListenerAdapter {
 								String response = "";
 								for ( int i = 0; i < Math.min( trackList.size(), 3 ); i++ ) {
 									if ( "".equals( response ) ) {
-										response = response + trackList.get( i ).getTitle();
+										response = response + trackList.get( i ).title;
 									} else {
-										response = response + " ❙ " + trackList.get( i ).getTitle();
+										response = response + " ❙ " + trackList.get( i ).title;
 									}
 								}
 								if ( trackList.size() > 3 ) {
@@ -132,22 +131,22 @@ public class BotListener extends ListenerAdapter {
 							}
 						}
 
-						List<TrackData> matchingTracks = database.addRequest( nick, randomRequest);
+						List<TrackMetadata> matchingTracks = database.addRequest( nick, randomRequest);
 						if ( matchingTracks.isEmpty() ) {
 							event.respondWith( "Sorry, I couldn't find any tracks containing " + matcher.group(3).replaceAll( "--random ", "" ));
 						}
 						if ( matchingTracks.size() == 1 ){
-							event.respondWith( matchingTracks.get( 0 ).getTitle() + " added to the queue." );
+							event.respondWith( matchingTracks.get( 0 ).title + " added to the queue." );
 						}
 						if ( matchingTracks.size() > 1 ) {
 							int randomTrack = RANDOM.nextInt(matchingTracks.size());
-							database.addRequest( nick, matchingTracks.get(randomTrack).getTitle() );
-							event.respondWith( matchingTracks.get(randomTrack).getTitle() + " added to the queue.");
+							database.addRequest( nick, matchingTracks.get(randomTrack).title );
+							event.respondWith( matchingTracks.get(randomTrack).title + " added to the queue.");
 						}
 					}
 					else if ( nick != null && matcher.group( 3 ) != null ) {
-						TrackData lastInRequest = database.getFinalFromRequests();
-						List<TrackData> matchingTracks = database.addRequest( nick, matcher.group(3).toString() );
+						TrackMetadata lastInRequest = database.getFinalFromRequests();
+						List<TrackMetadata> matchingTracks = database.addRequest( nick, matcher.group(3).toString() );
 
 						if ( matchingTracks.isEmpty() ) {
 							event.respondWith( "Sorry, I couldn't find any tracks containing " + matcher.group(3));
@@ -156,9 +155,9 @@ public class BotListener extends ListenerAdapter {
 							String response = "";
 							for ( int i = 0; i < Math.min( matchingTracks.size(), 3 ); i++ ) {
 								if ( "".equals( response ) ) {
-									response = response + matchingTracks.get( i ).getTitle();
+									response = response + matchingTracks.get( i ).title;
 								} else {
-									response = response + " ❙ " + matchingTracks.get( i ).getTitle();
+									response = response + " ❙ " + matchingTracks.get( i ).title;
 								}
 							}
 							if ( matchingTracks.size() > 3 ) {
@@ -166,11 +165,11 @@ public class BotListener extends ListenerAdapter {
 							}
 							event.respondWith( response );
 						}
-						if ( lastInRequest != null && matchingTracks.get( 0 ).getTitle().equalsIgnoreCase( lastInRequest.getTitle() ) ) {
-							event.respondWith( matchingTracks.get( 0 ).getTitle() + " is the last song in the request list. Please choose a different track.");
+						if ( lastInRequest != null && matchingTracks.get( 0 ).title.equalsIgnoreCase( lastInRequest.title ) ) {
+							event.respondWith( matchingTracks.get( 0 ).title + " is the last song in the request list. Please choose a different track.");
 						}
 						if ( matchingTracks.size() == 1 ){
-							event.respondWith( matchingTracks.get( 0 ).getTitle() + " added to the queue." );
+							event.respondWith( matchingTracks.get( 0 ).title + " added to the queue." );
 						}
 					}
 					break;
@@ -222,13 +221,5 @@ public class BotListener extends ListenerAdapter {
 					break;
 			}
 		}
-	}
-
-	@Override
-	public void onConnect( ConnectEvent event ) throws Exception {
-		database.addMP3s( new Config().getMusicDir() );
-
-		player.setQueue();
-		player.play();
 	}
 }

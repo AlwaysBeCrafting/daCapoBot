@@ -9,11 +9,11 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
 
-import stream.alwaysbecrafting.dacapobot.TrackData;
+import stream.alwaysbecrafting.dacapobot.TrackData.TrackMetadata;
 
 public class Mp3Parser implements Parser{
 
-	public Optional<TrackData> tryParse( Path path ){
+	public Optional<TrackMetadata> tryParse( Path path ){
 		try {
 			Mp3File mp3file = new Mp3File( path.toFile() );
 			ID3v1 id3v1 = null;
@@ -27,7 +27,7 @@ public class Mp3Parser implements Parser{
 				String title = id3v1.getTitle();
 				String artist = id3v1.getArtist();
 				String album = id3v1.getAlbum();
-				return Optional.of( new TrackData( path, title, artist, album ) );
+				return Optional.of( new TrackMetadata( path, title, artist, album ) );
 			}
 			return Optional.empty();
 

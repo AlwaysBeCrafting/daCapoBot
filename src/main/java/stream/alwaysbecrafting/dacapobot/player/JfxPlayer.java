@@ -3,13 +3,14 @@ package stream.alwaysbecrafting.dacapobot.player;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
+import java.nio.file.Files;
 
 import javafx.application.Platform;
 import javafx.embed.swing.JFXPanel;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import stream.alwaysbecrafting.dacapobot.Config;
-import stream.alwaysbecrafting.dacapobot.TrackData;
+import stream.alwaysbecrafting.dacapobot.TrackData.TrackMetadata;
 import stream.alwaysbecrafting.dacapobot.database.Database;
 
 public class JfxPlayer implements Player{
@@ -17,7 +18,7 @@ public class JfxPlayer implements Player{
 	private Database database;
 	private MediaPlayer player;
 	private long timestamp = System.currentTimeMillis();
-	private TrackData currentTrack;
+	private TrackMetadata currentTrack;
 	private Media media;
 
 	public JfxPlayer( Config config, Database database ) {
@@ -27,20 +28,20 @@ public class JfxPlayer implements Player{
 	}
 
 	public void setQueue() {
-		TrackData nextTrack = null;
-		while(nextTrack == null || !nextTrack.exists()) {
+		TrackMetadata nextTrack = null;
+		while(nextTrack == null || !Files.exists(nextTrack.path)) {
 			nextTrack = database.getRandomTrack();
 			this.currentTrack = nextTrack;
 		}
-		storeTrackTitle( currentTrack.getTitle() );
+		storeTrackTitle( currentTrack.title );
 	}
 
 	public void play() {
-		media = new Media( currentTrack.toURIString() );
+		media = new Media( currentTrack.path.toUri().toString() );
 		player = new MediaPlayer( media );
 		player.setOnEndOfMedia( () -> nextTrack() );
 		player.play();
-		System.out.println( "Now Playing: " + currentTrack.getTitle() );
+		System.out.println( "Now Playing: " + currentTrack.title );
 	}
 
 	private void storeTrackTitle( String s ) {
@@ -56,17 +57,17 @@ public class JfxPlayer implements Player{
 	public void nextTrack() {
 		stop();
 		storeTrackTitle( "" );
-		TrackData nextTrack = null;
-		while(nextTrack == null || !nextTrack.exists()) {
-			TrackData requestedTrack = database.getNextRequested( timestamp );
+		TrackMetadata nextTrack = null;
+		while(nextTrack == null || !Files.exists( nextTrack.path )) {
+			TrackMetadata requestedTrack = database.getNextRequested( timestamp );
 			if ( requestedTrack != null ) {
-				timestamp = requestedTrack.getTimestamp();
+				timestamp = requestedTrack.timestamp;
 				nextTrack = requestedTrack;
 			} else {
 				timestamp = System.currentTimeMillis();
 				nextTrack = database.getRandomTrack();
 			}
-			if( nextTrack == null || !nextTrack.exists() ) {
+			if( nextTrack == null || !Files.exists( nextTrack.path ) ) {
 				try {
 					Thread.sleep( 200 );
 				} catch ( InterruptedException e ) {
@@ -75,12 +76,12 @@ public class JfxPlayer implements Player{
 			}
 		}
 		this.currentTrack = nextTrack;
-		storeTrackTitle( currentTrack.getTitle() );
+		storeTrackTitle( currentTrack.title );
 		play();
 	}
 
 	public String getCurrentTitle() {
-		return currentTrack.getTitle();
+		return currentTrack.title;
 	}
 
 	public void stop() {

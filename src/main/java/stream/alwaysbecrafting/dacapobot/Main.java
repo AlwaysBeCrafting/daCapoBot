@@ -20,6 +20,9 @@ public class Main{
 		Player player = new JfxPlayer( config, database );
 		BotListener botListener = new BotListener( config, database, player );
 
+		database.addMP3s( new Config().getMusicDir() );
+		player.setQueue();
+		player.play();
 		Configuration botConfiguration = new Configuration.Builder()
 				.setAutoNickChange(false) //Twitch doesn't support multiple users
 				.setOnJoinWhoEnabled(false) //Twitch doesn't support WHO command

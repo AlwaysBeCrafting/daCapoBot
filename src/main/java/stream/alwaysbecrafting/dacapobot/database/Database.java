@@ -3,15 +3,15 @@ package stream.alwaysbecrafting.dacapobot.database;
 import java.io.File;
 import java.util.List;
 
-import stream.alwaysbecrafting.dacapobot.TrackData;
+import stream.alwaysbecrafting.dacapobot.TrackData.TrackMetadata;
 
 public interface Database {
 	void logChat( String user, String message );
 	void addMP3s( File dir ) throws Exception;
-	List<TrackData> addRequest( String user, final String request );
-	TrackData getFinalFromRequests();
-	List<TrackData> addVeto( String user, final String request );
-	TrackData getRandomTrack();
-	TrackData getNextRequested( long timestamp );
+	List<TrackMetadata> addRequest( String user, final String request );
+	TrackMetadata getFinalFromRequests();
+	List<TrackMetadata> addVeto( String user, final String request );
+	TrackMetadata getRandomTrack();
+	TrackMetadata getNextRequested( long timestamp );
 	void close();
 }
