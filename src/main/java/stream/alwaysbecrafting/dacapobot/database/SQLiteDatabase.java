@@ -29,9 +29,34 @@ public class SQLiteDatabase implements Database {
 	private static Config config;
 	private Parser mp3Parser = new Mp3Parser();
 
+	PreparedStatement insertIntoChatlog;
+	PreparedStatement getLastTrackInRequests;
+	PreparedStatement insertIntoRequests;
+	PreparedStatement insertIntoVeto;
+	PreparedStatement fuzzySearchTrackByTitle;
+	PreparedStatement nextRequestSql;
+	PreparedStatement getRandomFromTracks;
+
 	public SQLiteDatabase( Config config ) {
 		this.config = config;
 		connect();
+		try {
+			insertIntoChatlog = connection.prepareStatement( "INSERT INTO chat_log(timestamp,user,message) VALUES(?,?,?)" );
+			getLastTrackInRequests = connection.prepareStatement( "SELECT t.path, t.title, t.artist, t.album, t.id " +
+					"FROM tracks as t " +
+					"INNER JOIN requests as r ON t.id = r.track_id " +
+					"ORDER BY r.id DESC LIMIT 1" );
+			insertIntoRequests = connection.prepareStatement( "INSERT INTO requests(timestamp, user, track_id) VALUES(?,?,?)" );
+			insertIntoVeto = connection.prepareStatement( "INSERT INTO vetoes(timestamp, user, track_id) VALUES(?,?,?)" );
+			fuzzySearchTrackByTitle = connection.prepareStatement( "SELECT * FROM tracks WHERE title LIKE ?" );
+			nextRequestSql = connection.prepareStatement( "SELECT t.id, r.timestamp, t.title, t.album, t.artist, t.path " +
+					"FROM tracks AS t " +
+					"INNER JOIN requests AS r " +
+					"ON t.id = r.track_id WHERE r.timestamp > ? limit 1" );
+			getRandomFromTracks = connection.prepareStatement( "SELECT * FROM tracks WHERE id IN (SELECT id FROM tracks ORDER BY RANDOM() LIMIT 1)" );
+		} catch( SQLException e ){
+			throw new RuntimeException( e );
+		}
 	}
 
 	private void connect() {
@@ -121,24 +146,19 @@ public class SQLiteDatabase implements Database {
 	}
 
 	public void logChat( String user, String message ) {
-		String sql = "INSERT INTO chat_log(timestamp,user,message) VALUES(?,?,?)";
-		try ( PreparedStatement statement = connection.prepareStatement( sql ) ) {
-			statement.setLong( 1, currentTimeMillis() );
-			statement.setString( 2, user.toString() );
-			statement.setString( 3, message );
-			statement.executeUpdate();
+		try {
+			insertIntoChatlog.setLong( 1, currentTimeMillis() );
+			insertIntoChatlog.setString( 2, user.toString() );
+			insertIntoChatlog.setString( 3, message );
+			insertIntoChatlog.executeUpdate();
 		} catch ( SQLException e ) {
 			e.printStackTrace();
 		}
 	}
 
 	public TrackMetadata getFinalFromRequests() {
-		String select = "SELECT t.path, t.title, t.artist, t.album, t.id " +
-				"FROM tracks as t " +
-				"INNER JOIN requests as r ON t.id = r.track_id " +
-				"ORDER BY r.id DESC LIMIT 1";
-		try ( PreparedStatement statement = connection.prepareStatement( select ) ) {
-			ResultSet resultSet = statement.executeQuery();
+		try {
+			ResultSet resultSet = getLastTrackInRequests.executeQuery();
 			TrackMetadata track = new TrackMetadata(
 					Paths.get( resultSet.getString( "path" ) ),
 					resultSet.getString( "title" ),
@@ -156,12 +176,11 @@ public class SQLiteDatabase implements Database {
 		List<TrackMetadata> matchingTracks = getMatchingTracks( request );
 
 		if (matchingTracks.size() == 1 && !matchingTracks.get( 0 ).title.equalsIgnoreCase( getFinalFromRequests().title ) ) {
-			String insertRequest = "INSERT INTO requests(timestamp, user, track_id) VALUES(?,?,?)";
-			try ( PreparedStatement statement = connection.prepareStatement( insertRequest ) ) {
-				statement.setLong( 1, System.currentTimeMillis() );
-				statement.setString( 2, user );
-				statement.setInt( 3, matchingTracks.get( 0 ).id );
-				statement.execute();
+			try {
+				insertIntoRequests.setLong( 1, System.currentTimeMillis() );
+				insertIntoRequests.setString( 2, user );
+				insertIntoRequests.setInt( 3, matchingTracks.get( 0 ).id );
+				insertIntoRequests.execute();
 			} catch ( Exception e ) {
 				e.printStackTrace();
 			}
@@ -171,14 +190,12 @@ public class SQLiteDatabase implements Database {
 
 	public List<TrackMetadata> addVeto( String user, final String request ) {
 		List<TrackMetadata> matchingTracks = getMatchingTracks( request );
-
 		if(matchingTracks.size() == 1) {
-			String insertRequest = "INSERT INTO vetoes(timestamp, user, track_id) VALUES(?,?,?)";
-			try ( PreparedStatement statement = connection.prepareStatement( insertRequest ) ) {
-				statement.setLong( 1, System.currentTimeMillis() );
-				statement.setString( 2, user );
-				statement.setInt( 3, matchingTracks.get( 0 ).id );
-				statement.execute();
+			try {
+				insertIntoVeto.setLong( 1, System.currentTimeMillis() );
+				insertIntoVeto.setString( 2, user );
+				insertIntoVeto.setInt( 3, matchingTracks.get( 0 ).id );
+				insertIntoVeto.execute();
 			} catch ( Exception e ) {
 				e.printStackTrace();
 			}
@@ -189,10 +206,9 @@ public class SQLiteDatabase implements Database {
 	List<TrackMetadata> getMatchingTracks( String request ) {
 		List<TrackMetadata> tracks = new ArrayList<>();
 		String formattedRequest = request.replaceAll( "[\\W_]+", "%" );
-		try ( PreparedStatement statement = connection.prepareStatement(
-				"SELECT * FROM tracks WHERE title LIKE ?") ) {
-			statement.setString( 1, "%" + formattedRequest + "%" );
-			ResultSet rs = statement.executeQuery();
+		try {
+			fuzzySearchTrackByTitle.setString( 1, "%" + formattedRequest + "%" );
+			ResultSet rs = fuzzySearchTrackByTitle.executeQuery();
 			while ( rs.next() ) {
 				TrackMetadata track = new TrackMetadata(
 						Paths.get( rs.getString( "path" ) ),
@@ -212,13 +228,9 @@ public class SQLiteDatabase implements Database {
 	}
 
 	public TrackMetadata getNextRequested( long timestamp ) {
-		String nextRequestSql = "SELECT t.id, r.timestamp, t.title, t.album, t.artist, t.path " +
-				"FROM tracks AS t " +
-				"INNER JOIN requests AS r " +
-				"ON t.id = r.track_id WHERE r.timestamp > ? limit 1";
-		try ( PreparedStatement requestSql = connection.prepareStatement( nextRequestSql ) ) {
-			requestSql.setLong( 1, timestamp );
-			ResultSet trackData = requestSql.executeQuery();
+		try {
+			nextRequestSql.setLong( 1, timestamp );
+			ResultSet trackData = nextRequestSql.executeQuery();
 			while( trackData.next() ) {
 				TrackMetadata track = new TrackMetadata(
 					Paths.get( trackData.getString( "t.path" ) ),
@@ -237,9 +249,8 @@ public class SQLiteDatabase implements Database {
 
 	public TrackMetadata getRandomTrack() {
 		TrackMetadata track = null;
-		String sql = "SELECT * FROM tracks WHERE id IN (SELECT id FROM tracks ORDER BY RANDOM() LIMIT 1)";
-		try ( PreparedStatement statement = connection.prepareStatement( sql ) ) {
-			ResultSet rs = statement.executeQuery();
+		try {
+			ResultSet rs = getRandomFromTracks.executeQuery();
 			track = new TrackMetadata(
 					Paths.get( rs.getString( "path" ) ),
 					rs.getString( "title" ),
