@@ -135,10 +135,10 @@ public class BotListener extends ListenerAdapter {
 						if ( matchingTracks.isEmpty() ) {
 							event.respondWith( "Sorry, I couldn't find any tracks containing " + matcher.group(3).replaceAll( "--random ", "" ));
 						}
-						if ( matchingTracks.size() == 1 ){
+						else if ( matchingTracks.size() == 1 ){
 							event.respondWith( matchingTracks.get( 0 ).title + " added to the queue." );
 						}
-						if ( matchingTracks.size() > 1 ) {
+						else if ( matchingTracks.size() > 1 ) {
 							int randomTrack = RANDOM.nextInt(matchingTracks.size());
 							database.addRequest( nick, matchingTracks.get(randomTrack).title );
 							event.respondWith( matchingTracks.get(randomTrack).title + " added to the queue.");
@@ -168,7 +168,7 @@ public class BotListener extends ListenerAdapter {
 						if ( lastInRequest != null && matchingTracks.get( 0 ).title.equalsIgnoreCase( lastInRequest.title ) ) {
 							event.respondWith( matchingTracks.get( 0 ).title + " is the last song in the request list. Please choose a different track.");
 						}
-						if ( matchingTracks.size() == 1 ){
+						if ( matchingTracks.size() == 1 && !matchingTracks.get( 0 ).title.equalsIgnoreCase( lastInRequest.title )){
 							event.respondWith( matchingTracks.get( 0 ).title + " added to the queue." );
 						}
 					}

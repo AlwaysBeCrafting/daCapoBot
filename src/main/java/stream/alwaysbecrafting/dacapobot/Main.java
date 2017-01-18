@@ -19,7 +19,6 @@ public class Main{
 		Database database = new SQLiteDatabase( config );
 		Player player = new JfxPlayer( config, database );
 		BotListener botListener = new BotListener( config, database, player );
-
 		database.addMP3s( new Config().getMusicDir() );
 		player.setQueue();
 		player.play();
