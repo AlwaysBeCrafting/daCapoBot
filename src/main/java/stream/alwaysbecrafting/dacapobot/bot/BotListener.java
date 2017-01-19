@@ -150,7 +150,6 @@ public class BotListener extends ListenerAdapter {
 					else if ( nick != null && matcher.group( 3 ) != null ) {
 						TrackMetadata lastInRequest = database.getFinalFromRequests();
 						List<TrackMetadata> matchingTracks = database.searchTracksByTitle( matcher.group( 3 ).toString() );
-//								database.addRequest( nick, matcher.group(3).toString() );
 
 						if ( matchingTracks.isEmpty() ) {
 							event.respondWith( "Sorry, I couldn't find any tracks containing " + matcher.group(3));
