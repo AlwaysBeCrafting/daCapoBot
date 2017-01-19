@@ -18,9 +18,7 @@ import stream.alwaysbecrafting.dacapobot.TrackData.TrackMetadata;
 import stream.alwaysbecrafting.dacapobot.database.Database;
 import stream.alwaysbecrafting.dacapobot.player.Player;
 
-//==============================================================================
 public class BotListener extends ListenerAdapter {
-	//--------------------------------------------------------------------------
 	private final Random RANDOM = new Random();
 	private static final Pattern pattern = Pattern.compile( "^(\\S+)(\\s+(.*))?" );
 	private Config config;
@@ -80,14 +78,18 @@ public class BotListener extends ListenerAdapter {
 								.toLowerCase()
 								.replaceAll( "[^a-z0-9]+", "%" )
 								.contains( ( matcher.group(3).replaceAll( "[^a-z0-9]+", "%" ) ) ) ) {
-							database.addVeto( nick, player.getCurrentTitle() );
-							event.respondWith( player.getCurrentTitle() + " vetoed, thank you." );
+							database.addVeto( nick, database.searchTracksByTitle( player.getCurrentTitle() ).get( 0 ));
+							event.respondWith( player.getCurrentTitle() + " vetoed." );
 							player.nextTrack();
 						} else {
-							List<TrackMetadata> trackList = database.addVeto( nick, ( matcherArgs.toString() ) );
+							List<TrackMetadata> trackList = database.searchTracksByTitle( matcherArgs.toString() );
 
 							if ( trackList.isEmpty() ) {
 								event.respondWith( "Sorry, I couldn't find any tracks containing " + matcher.group( 2 ) );
+							}
+							if ( trackList.size() == 1 ) {
+								database.addVeto( nick, trackList.get( 0 ) );
+								event.respondWith( trackList.get( 0 ).title + "vetoed." );
 							}
 							if ( trackList.size() > 1 ) {
 								String response = "";
@@ -131,22 +133,24 @@ public class BotListener extends ListenerAdapter {
 							}
 						}
 
-						List<TrackMetadata> matchingTracks = database.addRequest( nick, randomRequest);
+						List<TrackMetadata> matchingTracks = database.searchTracksByTitle( randomRequest );
 						if ( matchingTracks.isEmpty() ) {
 							event.respondWith( "Sorry, I couldn't find any tracks containing " + matcher.group(3).replaceAll( "--random ", "" ));
 						}
 						else if ( matchingTracks.size() == 1 ){
+							database.addRequest( nick, matchingTracks.get( 0 ) );
 							event.respondWith( matchingTracks.get( 0 ).title + " added to the queue." );
 						}
 						else if ( matchingTracks.size() > 1 ) {
 							int randomTrack = RANDOM.nextInt(matchingTracks.size());
-							database.addRequest( nick, matchingTracks.get(randomTrack).title );
+							database.addRequest( nick, matchingTracks.get(randomTrack) );
 							event.respondWith( matchingTracks.get(randomTrack).title + " added to the queue.");
 						}
 					}
 					else if ( nick != null && matcher.group( 3 ) != null ) {
 						TrackMetadata lastInRequest = database.getFinalFromRequests();
-						List<TrackMetadata> matchingTracks = database.addRequest( nick, matcher.group(3).toString() );
+						List<TrackMetadata> matchingTracks = database.searchTracksByTitle( matcher.group( 3 ).toString() );
+//								database.addRequest( nick, matcher.group(3).toString() );
 
 						if ( matchingTracks.isEmpty() ) {
 							event.respondWith( "Sorry, I couldn't find any tracks containing " + matcher.group(3));
@@ -169,6 +173,7 @@ public class BotListener extends ListenerAdapter {
 							event.respondWith( matchingTracks.get( 0 ).title + " is the last song in the request list. Please choose a different track.");
 						}
 						if ( matchingTracks.size() == 1 && !matchingTracks.get( 0 ).title.equalsIgnoreCase( lastInRequest.title )){
+							database.addRequest( nick, matchingTracks.get( 0 ) );
 							event.respondWith( matchingTracks.get( 0 ).title + " added to the queue." );
 						}
 					}

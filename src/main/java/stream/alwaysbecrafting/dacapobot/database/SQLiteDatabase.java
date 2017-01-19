@@ -48,7 +48,7 @@ public class SQLiteDatabase implements Database {
 					"ORDER BY r.id DESC LIMIT 1" );
 			insertIntoRequests = connection.prepareStatement( "INSERT INTO requests(timestamp, user, track_id) VALUES(?,?,?)" );
 			insertIntoVeto = connection.prepareStatement( "INSERT INTO vetoes(timestamp, user, track_id) VALUES(?,?,?)" );
-			fuzzySearchTrackByTitle = connection.prepareStatement( "SELECT * FROM tracks WHERE title LIKE ?" );
+			fuzzySearchTrackByTitle = connection.prepareStatement( "SELECT * FROM tracks WHERE path LIKE ?" );
 			nextRequestSql = connection.prepareStatement( "SELECT t.id, r.timestamp, t.title, t.album, t.artist, t.path " +
 					"FROM tracks AS t " +
 					"INNER JOIN requests AS r " +
@@ -115,6 +115,7 @@ public class SQLiteDatabase implements Database {
 			while ( resultSet.next() ) {
 				pathsFromDB.add( resultSet.getString( "path" ) );
 			}
+			resultSet.close();
 		}
 		List<TrackMetadata> tracksToInsert = Files.walk( dir.toPath(), FileVisitOption.FOLLOW_LINKS )
 				.filter( path -> path.toString().endsWith( ".mp3" ))
@@ -165,6 +166,7 @@ public class SQLiteDatabase implements Database {
 					resultSet.getString( "artist" ),
 					resultSet.getString( "album" ) );
 			track.setId( resultSet.getInt( "id" ) );
+			resultSet.close();
 			return track;
 		} catch ( SQLException e ) {
 			e.printStackTrace();
@@ -172,38 +174,29 @@ public class SQLiteDatabase implements Database {
 		return null;
 	}
 
-	public List<TrackMetadata> addRequest( String user, final String request ) {
-		List<TrackMetadata> matchingTracks = getMatchingTracks( request );
-
-		if (matchingTracks.size() == 1 && !matchingTracks.get( 0 ).title.equalsIgnoreCase( getFinalFromRequests().title ) ) {
+	public void addRequest( String user, final TrackMetadata track ) {
 			try {
 				insertIntoRequests.setLong( 1, System.currentTimeMillis() );
 				insertIntoRequests.setString( 2, user );
-				insertIntoRequests.setInt( 3, matchingTracks.get( 0 ).id );
+				insertIntoRequests.setInt( 3, track.id );
 				insertIntoRequests.execute();
 			} catch ( Exception e ) {
 				e.printStackTrace();
 			}
-		}
-		return matchingTracks;
 	}
 
-	public List<TrackMetadata> addVeto( String user, final String request ) {
-		List<TrackMetadata> matchingTracks = getMatchingTracks( request );
-		if(matchingTracks.size() == 1) {
+	public void addVeto( String user, final TrackMetadata trackMetadata ) {
 			try {
 				insertIntoVeto.setLong( 1, System.currentTimeMillis() );
 				insertIntoVeto.setString( 2, user );
-				insertIntoVeto.setInt( 3, matchingTracks.get( 0 ).id );
+				insertIntoVeto.setInt( 3, trackMetadata.id );
 				insertIntoVeto.execute();
 			} catch ( Exception e ) {
 				e.printStackTrace();
 			}
-		}
-		return matchingTracks;
 	}
 
-	List<TrackMetadata> getMatchingTracks( String request ) {
+	public List<TrackMetadata> searchTracksByTitle( String request ) {
 		List<TrackMetadata> tracks = new ArrayList<>();
 		String formattedRequest = request.replaceAll( "[\\W_]+", "%" );
 		try {
@@ -221,6 +214,8 @@ public class SQLiteDatabase implements Database {
 				track.setId( rs.getInt( "id" ) );
 				tracks.add( track );
 			}
+			rs.close();
+			tracks.size();
 		} catch ( SQLException e ) {
 			e.printStackTrace();
 		}
@@ -233,12 +228,13 @@ public class SQLiteDatabase implements Database {
 			ResultSet trackData = nextRequestSql.executeQuery();
 			while( trackData.next() ) {
 				TrackMetadata track = new TrackMetadata(
-					Paths.get( trackData.getString( "t.path" ) ),
-					trackData.getString( "t.title" ),
-					trackData.getString( "t.artist" ),
-					trackData.getString( "t.album" )  );
-			track.setId( trackData.getInt( "t.id" ) );
-			track.setTimestamp( trackData.getLong( "r.timestamp" ) );
+					Paths.get( trackData.getString( "path" ) ),
+					trackData.getString( "title" ),
+					trackData.getString( "artist" ),
+					trackData.getString( "album" )  );
+			track.setId( trackData.getInt( "id" ) );
+			track.setTimestamp( trackData.getLong( "timestamp" ) );
+			trackData.close();
 			return track;
 			}
 		} catch ( SQLException e ) {
@@ -257,6 +253,7 @@ public class SQLiteDatabase implements Database {
 					rs.getString( "artist" ),
 					rs.getString( "album" ) );
 			track.setId( rs.getInt( "id" ) );
+			rs.close();
 			return track;
 		} catch ( Exception e ) {
 			e.printStackTrace();
