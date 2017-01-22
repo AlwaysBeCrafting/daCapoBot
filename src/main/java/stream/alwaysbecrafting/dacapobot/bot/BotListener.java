@@ -1,7 +1,6 @@
-package stream.alwaysbecrafting.dacapobot;
+package stream.alwaysbecrafting.dacapobot.bot;
 
 import org.pircbotx.hooks.ListenerAdapter;
-import org.pircbotx.hooks.events.ConnectEvent;
 import org.pircbotx.hooks.events.DisconnectEvent;
 import org.pircbotx.hooks.events.MessageEvent;
 
@@ -14,9 +13,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-//==============================================================================
-class BotListener extends ListenerAdapter {
-	//--------------------------------------------------------------------------
+import stream.alwaysbecrafting.dacapobot.Config;
+import stream.alwaysbecrafting.dacapobot.TrackData.TrackMetadata;
+import stream.alwaysbecrafting.dacapobot.database.Database;
+import stream.alwaysbecrafting.dacapobot.player.Player;
+
+public class BotListener extends ListenerAdapter {
 	private final Random RANDOM = new Random();
 	private static final Pattern pattern = Pattern.compile( "^(\\S+)(\\s+(.*))?" );
 	private Config config;
@@ -28,6 +30,7 @@ class BotListener extends ListenerAdapter {
 		this.database = database;
 		this.player = player;
 	}
+
 	@Override
 	public void onDisconnect( DisconnectEvent event ) throws Exception{
 		event.getBot().close();
@@ -75,14 +78,18 @@ class BotListener extends ListenerAdapter {
 								.toLowerCase()
 								.replaceAll( "[^a-z0-9]+", "%" )
 								.contains( ( matcher.group(3).replaceAll( "[^a-z0-9]+", "%" ) ) ) ) {
-							database.addVeto( nick, player.getCurrentTitle() );
-							event.respondWith( player.getCurrentTitle() + " vetoed, thank you." );
+							database.addVeto( nick, database.searchTracksByTitle( player.getCurrentTitle() ).get( 0 ));
+							event.respondWith( player.getCurrentTitle() + " vetoed." );
 							player.nextTrack();
 						} else {
-							List<Track> trackList = database.addVeto( nick, ( matcherArgs.toString() ) );
+							List<TrackMetadata> trackList = database.searchTracksByTitle( matcherArgs.toString() );
 
 							if ( trackList.isEmpty() ) {
 								event.respondWith( "Sorry, I couldn't find any tracks containing " + matcher.group( 2 ) );
+							}
+							if ( trackList.size() == 1 ) {
+								database.addVeto( nick, trackList.get( 0 ) );
+								event.respondWith( trackList.get( 0 ).title + "vetoed." );
 							}
 							if ( trackList.size() > 1 ) {
 								String response = "";
@@ -126,22 +133,23 @@ class BotListener extends ListenerAdapter {
 							}
 						}
 
-						List<Track> matchingTracks = database.addRequest( nick, randomRequest);
+						List<TrackMetadata> matchingTracks = database.searchTracksByTitle( randomRequest );
 						if ( matchingTracks.isEmpty() ) {
 							event.respondWith( "Sorry, I couldn't find any tracks containing " + matcher.group(3).replaceAll( "--random ", "" ));
 						}
-						if ( matchingTracks.size() == 1 ){
+						else if ( matchingTracks.size() == 1 ){
+							database.addRequest( nick, matchingTracks.get( 0 ) );
 							event.respondWith( matchingTracks.get( 0 ).title + " added to the queue." );
 						}
-						if ( matchingTracks.size() > 1 ) {
+						else if ( matchingTracks.size() > 1 ) {
 							int randomTrack = RANDOM.nextInt(matchingTracks.size());
-							database.addRequest( nick, matchingTracks.get(randomTrack).title );
+							database.addRequest( nick, matchingTracks.get(randomTrack) );
 							event.respondWith( matchingTracks.get(randomTrack).title + " added to the queue.");
 						}
 					}
 					else if ( nick != null && matcher.group( 3 ) != null ) {
-						Track lastInRequest = database.getFinalFromRequests();
-						List<Track> matchingTracks = database.addRequest( nick, matcher.group(3).toString() );
+						TrackMetadata lastInRequest = database.getFinalFromRequests();
+						List<TrackMetadata> matchingTracks = database.searchTracksByTitle( matcher.group( 3 ).toString() );
 
 						if ( matchingTracks.isEmpty() ) {
 							event.respondWith( "Sorry, I couldn't find any tracks containing " + matcher.group(3));
@@ -163,7 +171,8 @@ class BotListener extends ListenerAdapter {
 						if ( lastInRequest != null && matchingTracks.get( 0 ).title.equalsIgnoreCase( lastInRequest.title ) ) {
 							event.respondWith( matchingTracks.get( 0 ).title + " is the last song in the request list. Please choose a different track.");
 						}
-						if ( matchingTracks.size() == 1 ){
+						if ( matchingTracks.size() == 1 && !matchingTracks.get( 0 ).title.equalsIgnoreCase( lastInRequest.title )){
+							database.addRequest( nick, matchingTracks.get( 0 ) );
 							event.respondWith( matchingTracks.get( 0 ).title + " added to the queue." );
 						}
 					}
@@ -216,13 +225,5 @@ class BotListener extends ListenerAdapter {
 					break;
 			}
 		}
-	}
-
-	@Override
-	public void onConnect( ConnectEvent event ) throws Exception {
-		database.addMP3s( new Config().getMusicDir() );
-
-		player.setQueue();
-		player.play();
 	}
 }
