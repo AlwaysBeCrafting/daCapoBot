@@ -55,42 +55,45 @@ public class JfxPlayer implements Player{
 	}
 
 	public void nextTrack() {
-		stop();
-		storeTrackTitle( "" );
-		TrackMetadata nextTrack = null;
-		while(nextTrack == null || !Files.exists( nextTrack.path )) {
-			TrackMetadata requestedTrack = database.getNextRequested( timestamp );
-			if ( requestedTrack != null ) {
-				timestamp = requestedTrack.timestamp;
-				nextTrack = requestedTrack;
-			} else {
-				timestamp = System.currentTimeMillis();
-				nextTrack = database.getRandomTrack();
-			}
-			if( nextTrack == null || !Files.exists( nextTrack.path ) ) {
-				try {
-					Thread.sleep( 200 );
-				} catch ( InterruptedException e ) {
-					e.printStackTrace();
+		stop( () -> {
+			storeTrackTitle( "" );
+			TrackMetadata nextTrack = null;
+			while(nextTrack == null || !Files.exists( nextTrack.path )) {
+				TrackMetadata requestedTrack = database.getNextRequested( timestamp );
+				if ( requestedTrack != null ) {
+					timestamp = requestedTrack.timestamp;
+					nextTrack = requestedTrack;
+				} else {
+					timestamp = System.currentTimeMillis();
+					nextTrack = database.getRandomTrack();
+				}
+				if( nextTrack == null || !Files.exists( nextTrack.path ) ) {
+					try {
+						Thread.sleep( 200 );
+					} catch ( InterruptedException e ) {
+						e.printStackTrace();
+					}
 				}
 			}
-		}
-		this.currentTrack = nextTrack;
-		storeTrackTitle( currentTrack.title );
-		play();
+			this.currentTrack = nextTrack;
+			storeTrackTitle( currentTrack.title );
+			play();
+		});
 	}
 
 	public String getCurrentTitle() {
 		return currentTrack.title;
 	}
 
-	public void stop() {
+	public void stop( Runnable runnable ) {
+		player.setOnStopped( runnable );
 		player.stop();
 	}
 
 	public void exit() {
-		stop();
-		storeTrackTitle( "" );
-		Platform.exit();
+		stop( () -> {
+			storeTrackTitle( "" );
+			Platform.exit();
+		});
 	}
 }
