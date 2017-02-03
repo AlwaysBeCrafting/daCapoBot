@@ -33,6 +33,8 @@ public class BotListener extends ListenerAdapter {
 
 	@Override
 	public void onDisconnect( DisconnectEvent event ) throws Exception{
+		player.exit();
+		database.close();
 		event.getBot().close();
 	}
 
@@ -57,8 +59,6 @@ public class BotListener extends ListenerAdapter {
 					Optional isAdmin = config.getAdmins().stream().filter( s -> s.equals( nick ) ).findAny();
 					if ( isAdmin.isPresent() ) {
 						event.respondWith( "Clumsy Robot stopped moving!" );
-						player.exit();
-						database.close();
 						event.getBot().send().quitServer();
 					} else {
 						event.respondWith( "I'm sorry " + nick + ", I'm afraid I can't do that." );
