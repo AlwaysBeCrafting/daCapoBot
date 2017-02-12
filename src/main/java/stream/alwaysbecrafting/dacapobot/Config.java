@@ -29,13 +29,14 @@ public class Config {
 			File file = new File("dacapobot.properties");
 			if ( !file.exists() ) {
 				try ( OutputStream output = new FileOutputStream( file ) ) {
-					props.setProperty( "music_directory", "$HOME/Music" );
+					props.setProperty( "music_directory", "<yourHomePathHere>/Music" );
 					props.setProperty( "bot_name", "YOUR_BOT_NAME_HERE" );
 					props.setProperty( "irc_server", "irc.twitch.tv" );
 					props.setProperty( "irc_channel", "#test" );
 					props.setProperty( "oauth", "BIGOAUTHTOKENHERE" );
 					props.setProperty( "live_track_file", "location where the current track title stored." );
 					props.setProperty( "admins", "#,#" );
+					props.setProperty( "db_path", "<yourHomePathHere>/dacapobot.db");
 					props.store( output, null );
 				}
 				System.err.println( "Error: Properties path not exist " + file.getCanonicalPath() + "\n\t\tCreating, please edit before next run." );
@@ -77,14 +78,6 @@ public class Config {
 
 	public String getDBPath() {
 		return props.getProperty( "db_path" );
-	}
-
-	public String getDBName() {
-		return props.getProperty( "db_name" );
-	}
-
-	public String getDB() {
-		return getDBPath() + getDBName();
 	}
 
 	public List<String> getAdmins() {

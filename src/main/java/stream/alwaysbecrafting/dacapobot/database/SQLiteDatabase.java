@@ -69,7 +69,7 @@ public class SQLiteDatabase implements Database {
 		}
 		connection = null;
 		try {
-			String url = "jdbc:sqlite:" + new File( config.getDB() ).getCanonicalPath() + "?journal_mode=WAL&synchronous=NORMAL&foreign_keys=ON";
+			String url = "jdbc:sqlite:" + new File( config.getDBPath() ).getCanonicalPath() + "?journal_mode=WAL&synchronous=NORMAL&foreign_keys=ON";
 			connection = DriverManager.getConnection( url );
 			System.out.println( "Connection to SQLite has been established." );
 			checkIfTablesExist();
