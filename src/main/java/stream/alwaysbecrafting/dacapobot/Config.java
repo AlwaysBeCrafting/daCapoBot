@@ -12,15 +12,15 @@ import java.util.Properties;
 public class Config {
 	public final Properties props;
 	private final List<String> propertiesList = Arrays.asList(
-			"music_directory"
-			,"bot_name"
-			,"irc_channel"
-			,"irc_server"
-			,"oauth"
-			,"live_track_file"
-			,"admins"
-			,"db_path"
-			,"db_name");
+			"music_directory",
+			"bot_name",
+			"irc_channel",
+			"irc_server",
+			"oauth",
+			"live_track_file",
+			"admins",
+			"db_path"
+			);
 
 
 	public Config() {
