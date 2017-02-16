@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Properties;
 
 public class Config {
+
 	public final Properties props;
 	private final List<String> propertiesList = Arrays.asList(
 			"music_directory",

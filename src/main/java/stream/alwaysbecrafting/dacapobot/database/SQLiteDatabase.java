@@ -126,16 +126,6 @@ public class SQLiteDatabase implements Database {
 						( list, path ) -> mp3Parser.tryParse( path ).ifPresent( value -> list.add( value ) ),
 						( list1, list2 ) -> list1.addAll( list2 )
 				);
-		if(dir.isDirectory())
-		{
-			if(dir.list().length>0){
-				System.out.println("You have tracks to insert...");
-			}
-			else {
-				System.out.println("You have no tracks in your music directory!");
-				connection.close();
-			}
-		}
 		connection.setAutoCommit( false );
 		String insertIntoTracks = "INSERT INTO tracks(title,path,artist,album) VALUES(?,?,?,?)";
 		try( PreparedStatement preparedStatement = connection.prepareStatement( insertIntoTracks ) ) {
