@@ -198,6 +198,13 @@ public class BotListener extends ListenerAdapter {
 					event.respondWith( "Feature requests are welcome, please submit to https://github.com/AlwaysBeCrafting/dacapobot/issues" );
 					break;
 
+				case "!admins":
+						List admin_list = config.getAdmins();
+						if (admin_list.size() > 0) {
+							event.respondWith("The admins are: " + admin_list);
+							break;
+						}
+
 				case "!help":
 					if (matcherArgs.isEmpty()) {
 						event.respondWith( "!help [Option] ... Options: !whoru, !help, !veto, !request, !suggestions" );
