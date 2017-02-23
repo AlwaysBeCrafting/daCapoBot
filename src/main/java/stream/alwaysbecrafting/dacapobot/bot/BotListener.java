@@ -7,6 +7,7 @@ import org.pircbotx.hooks.events.MessageEvent;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.Random;
 import java.util.regex.Matcher;
@@ -62,6 +63,36 @@ public class BotListener extends ListenerAdapter {
 						event.getBot().send().quitServer();
 					} else {
 						event.respondWith( "I'm sorry " + nick + ", I'm afraid I can't do that." );
+					}
+					break;
+
+				case "!time":
+					String current_time = config.getTime();
+
+					if ( current_time != null ) {
+						event.respondWith( "The time is " + current_time );
+					} else {
+						event.respondWith( "No" );
+					}
+					break;
+
+				case "!timezones":
+					List<String> zone_times = new ArrayList<String>();
+					zone_times.addAll(config.getTimeZones());
+					for ( int i = 0; i < zone_times.size(); i++ ) {
+						if ( zone_times.get(i).startsWith( "SystemV" ) || zone_times.get(i).startsWith( "GMT" ))
+						{
+							zone_times.remove(i);
+						}
+					}
+					String current_tz = config.props.getProperty( "timezone" );
+					boolean contains = zone_times.contains(config.props.getProperty( "timezone" ));
+
+					if ( !contains ) {
+						event.respondWith( "No" );
+						
+					} else {
+						event.respondWith( "Your timezone is " + current_tz);
 					}
 					break;
 

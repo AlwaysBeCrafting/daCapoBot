@@ -5,7 +5,11 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.time.ZoneId;
+import java.time.LocalDateTime;
+import java.util.TimeZone;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
@@ -73,7 +77,7 @@ public class Config {
 	}
 
 	public String getChannel() {
-		return 	props.getProperty( "irc_channel" );
+		return props.getProperty( "irc_channel" );
 	}
 
 	public String getDBPath() {
@@ -82,6 +86,19 @@ public class Config {
 
 	public List<String> getAdmins() {
 		return Arrays.asList( props.getProperty( "admins" ).toString().split( "," ) );
+	}
+
+	public List<String> getTimeZones() {
+		String[] tzones = TimeZone.getAvailableIDs();
+		Arrays.sort(tzones);
+		return Arrays.asList(tzones);
+	}
+
+	public String getTime() {
+
+		ZoneId your_zone = ZoneId.of(props.getProperty( "timezone" ));
+		LocalDateTime time_now = LocalDateTime.now(your_zone);
+		return time_now.toString();
 	}
 
 	public File getTrackFile() {
