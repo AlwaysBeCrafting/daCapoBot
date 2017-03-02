@@ -5,17 +5,9 @@ import java.io.IOException;
 import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Scanner;
-import java.util.Set;
+import java.sql.*;
+import java.util.*;
+
 
 import stream.alwaysbecrafting.dacapobot.Config;
 import stream.alwaysbecrafting.dacapobot.TrackData.TrackMetadata;
@@ -36,6 +28,7 @@ public class SQLiteDatabase implements Database {
 	PreparedStatement fuzzySearchTrackByTitle;
 	PreparedStatement nextRequestSql;
 	PreparedStatement getRandomFromTracks;
+	PreparedStatement bookSlot;
 
 	public SQLiteDatabase( Config config ) {
 		this.config = config;
@@ -54,6 +47,7 @@ public class SQLiteDatabase implements Database {
 					"INNER JOIN requests AS r " +
 					"ON t.id = r.track_id WHERE r.timestamp > ? limit 1" );
 			getRandomFromTracks = connection.prepareStatement( "SELECT * FROM tracks WHERE id IN (SELECT id FROM tracks ORDER BY RANDOM() LIMIT 1)" );
+			bookSlot = connection.prepareStatement( "INSERT INTO slots (time_slot, title) VALUES(?,?) " );
 		} catch( SQLException e ){
 			throw new RuntimeException( e );
 		}
@@ -106,6 +100,32 @@ public class SQLiteDatabase implements Database {
 		System.out.println( "Done." );
 	}
 
+	public String checkAvailableSlots() throws Exception {
+		System.out.println( "Checking available slots..." );
+		Statement stmt = connection.createStatement();
+		ResultSet returned_slots = null;
+		ResultSetMetaData slot_metadata;
+		String[] available_slots = null;
+		String slots_returned = null;
+
+			try {
+				returned_slots = stmt.executeQuery("SELECT * FROM slots WHERE is_bookable = 1");
+				slot_metadata = returned_slots.getMetaData();
+				int numberOfColumns = slot_metadata.getColumnCount();
+
+			while (returned_slots.next()) {
+				int i = 1;
+				while( i <= numberOfColumns )
+				slots_returned = returned_slots.getString("slot");
+			}
+
+			} catch ( SQLException e ) {
+				e.printStackTrace();
+			}
+
+			return slots_returned;
+	}
+
 	public void addMP3s( File dir ) throws Exception{
 		System.out.println( "Checking for tracks to insert ...");
 		Set<String> pathsFromDB = new HashSet<>();
@@ -126,16 +146,7 @@ public class SQLiteDatabase implements Database {
 						( list, path ) -> mp3Parser.tryParse( path ).ifPresent( value -> list.add( value ) ),
 						( list1, list2 ) -> list1.addAll( list2 )
 				);
-		if(dir.isDirectory())
-		{
-			if(dir.list().length>0){
-				System.out.println("You have tracks to insert...");
-			}
-			else {
-				System.out.println("You have no tracks in your music directory!");
-				connection.close();
-			}
-		}
+
 		connection.setAutoCommit( false );
 		String insertIntoTracks = "INSERT INTO tracks(title,path,artist,album) VALUES(?,?,?,?)";
 		try( PreparedStatement preparedStatement = connection.prepareStatement( insertIntoTracks ) ) {

@@ -7,6 +7,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.time.ZoneId;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.text.DateFormat;
 import java.util.TimeZone;
 import java.util.Arrays;
 import java.util.ArrayList;
@@ -97,8 +99,8 @@ public class Config {
 	public String getTime() {
 
 		ZoneId your_zone = ZoneId.of(props.getProperty( "timezone" ));
-		LocalDateTime time_now = LocalDateTime.now(your_zone);
-		return time_now.toString();
+		String time_now = DateTimeFormatter.ofPattern("HH:mm a").format(LocalDateTime.now(your_zone));
+		return time_now;
 	}
 
 	public File getTrackFile() {

@@ -14,5 +14,6 @@ public interface Database {
 	void addVeto( String user, final TrackMetadata trackMetadata );
 	TrackMetadata getRandomTrack();
 	TrackMetadata getNextRequested( long timestamp );
+
 	void close();
 }
