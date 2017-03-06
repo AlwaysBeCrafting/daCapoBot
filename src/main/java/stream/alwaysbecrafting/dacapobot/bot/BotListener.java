@@ -4,9 +4,12 @@ import org.pircbotx.hooks.ListenerAdapter;
 import org.pircbotx.hooks.events.DisconnectEvent;
 import org.pircbotx.hooks.events.MessageEvent;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.Random;
 import java.util.regex.Matcher;
@@ -44,6 +47,14 @@ public class BotListener extends ListenerAdapter {
 			database.logChat( event.getUser().getNick(), event.getMessage() );
 		}
 
+		List<String> zone_times = new ArrayList<String>();
+		zone_times.addAll(config.getTimeZones());
+		for (int i = 0; i < zone_times.size(); i++) {
+			if (zone_times.get(i).startsWith("SystemV") || zone_times.get(i).startsWith("GMT")) {
+				zone_times.remove(i);
+			}
+		}
+
 		String nick = event.getUser().getNick();
 		String eventMessage = event.getMessage().toLowerCase();
 		Matcher matcher = pattern.matcher( eventMessage );
@@ -54,6 +65,7 @@ public class BotListener extends ListenerAdapter {
 						.filter( s -> s.length() > 2 )
 						.collect( Collectors.toList() );
 			}
+
 			switch ( matcher.group( 1 ) ) {
 				case "!shutdown":
 					Optional isAdmin = config.getAdmins().stream().filter( s -> s.equals( nick ) ).findAny();
@@ -62,6 +74,18 @@ public class BotListener extends ListenerAdapter {
 						event.getBot().send().quitServer();
 					} else {
 						event.respondWith( "I'm sorry " + nick + ", I'm afraid I can't do that." );
+					}
+					break;
+
+				case "!time":
+					String current_time = config.getTime();
+					String current_tz = config.props.getProperty("timezone");
+
+					if (zone_times.contains(current_tz.trim())) {
+						event.respondWith("The current time is " + current_time);
+					}
+					else {
+						event.respondWith("Invalid timezone!");
 					}
 					break;
 
