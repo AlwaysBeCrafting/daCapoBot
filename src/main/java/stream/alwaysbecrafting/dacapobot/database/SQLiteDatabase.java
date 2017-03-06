@@ -9,6 +9,7 @@ import java.sql.*;
 import java.util.*;
 
 
+import org.omg.SendingContext.RunTime;
 import stream.alwaysbecrafting.dacapobot.Config;
 import stream.alwaysbecrafting.dacapobot.TrackData.TrackMetadata;
 import stream.alwaysbecrafting.dacapobot.bot.commands.Mp3Parser;
@@ -17,8 +18,8 @@ import stream.alwaysbecrafting.dacapobot.bot.commands.Parser;
 import static java.lang.System.currentTimeMillis;
 
 public class SQLiteDatabase implements Database {
-	private static Connection connection;
 	private static Config config;
+	private static Connection connection;
 	private Parser mp3Parser = new Mp3Parser();
 
 	PreparedStatement insertIntoChatlog;
@@ -100,29 +101,30 @@ public class SQLiteDatabase implements Database {
 		System.out.println( "Done." );
 	}
 
-	public String checkAvailableSlots() throws Exception {
+	public String checkAvailableSlots() throws SQLException {
 		System.out.println( "Checking available slots..." );
 		Statement stmt = connection.createStatement();
-		ResultSet returned_slots = null;
+		ResultSet returned_slots;
 		ResultSetMetaData slot_metadata;
-		String[] available_slots = null;
-		String slots_returned = null;
+		StringBuilder column_return = new StringBuilder();
+		String slots_returned;
 
 			try {
-				returned_slots = stmt.executeQuery("SELECT * FROM slots WHERE is_bookable = 1");
+				returned_slots = stmt.executeQuery("SELECT * FROM slots");
 				slot_metadata = returned_slots.getMetaData();
 				int numberOfColumns = slot_metadata.getColumnCount();
 
 			while (returned_slots.next()) {
 				int i = 1;
 				while( i <= numberOfColumns )
-				slots_returned = returned_slots.getString("slot");
+				column_return.append(returned_slots.getString("time_slot"));
 			}
+			column_return.append("\r\n");
 
 			} catch ( SQLException e ) {
 				e.printStackTrace();
 			}
-
+			slots_returned = column_return.toString();
 			return slots_returned;
 	}
 

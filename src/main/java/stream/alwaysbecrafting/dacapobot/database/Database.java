@@ -14,6 +14,7 @@ public interface Database {
 	void addVeto( String user, final TrackMetadata trackMetadata );
 	TrackMetadata getRandomTrack();
 	TrackMetadata getNextRequested( long timestamp );
+	String checkAvailableSlots() throws Exception;
 
 	void close();
 }

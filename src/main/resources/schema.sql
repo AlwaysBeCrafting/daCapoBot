@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS slots (
 
     FOREIGN KEY (slot_id) REFERENCES tracks(id));
 
-/* CREATE TRIGGER book_out_slot AFTER INSERT ON slots
+CREATE TRIGGER book_out_slot AFTER INSERT ON slots
     BEGIN
         UPDATE slots SET is_bookable = 0 WHERE id = max(id) AND is_bookable = NULL;
-    END; */
+    END;

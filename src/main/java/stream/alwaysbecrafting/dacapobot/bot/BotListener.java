@@ -144,6 +144,18 @@ public class BotListener extends ListenerAdapter {
 					break;
 				}
 
+				case "!slots": {
+					String available_slots = database.checkAvailableSlots();
+
+					if (available_slots.length() > 0) {
+						event.respondWith("The available slots are" + 					available_slots);
+					}
+					else {
+						event.respondWith( "Sorry, there are no available slots." );
+					}
+					break;
+				}
+
 				case "!request": {
 					if (matcherArgs.isEmpty()) {
 						event.respondWith("Sorry, " + matcher.group(3) + " is too vague. See '!help !request'" +
