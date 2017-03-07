@@ -4,10 +4,6 @@ import org.pircbotx.hooks.ListenerAdapter;
 import org.pircbotx.hooks.events.DisconnectEvent;
 import org.pircbotx.hooks.events.MessageEvent;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -49,39 +45,6 @@ public class BotListener extends ListenerAdapter {
 			database.logChat( event.getUser().getNick(), event.getMessage() );
 		}
 
-		List<String> zone_times = new ArrayList<String>();
-		zone_times.addAll(config.getTimeZones());
-		for (int i = 0; i < zone_times.size(); i++) {
-			if (zone_times.get(i).startsWith("SystemV") || zone_times.get(i).startsWith("GMT")) {
-				zone_times.remove(i);
-				i--;
-			}
-			else if (zone_times.get(i).startsWith("NZ") || zone_times.get(i).startsWith("GB")) {
-				zone_times.remove(i);
-				i--;
-			}
-
-			else if (zone_times.get(i).startsWith("UTC") || zone_times.get(i).startsWith("Universal")) {
-				zone_times.remove(i);
-				i--;
-			}
-
-			else if (zone_times.get(i).startsWith("VST") || zone_times.get(i).startsWith("W-SU")) {
-				zone_times.remove(i);
-				i--;
-			}
-
-			else if (zone_times.get(i).startsWith("WET") || zone_times.get(i).startsWith("Zulu")) {
-				zone_times.remove(i);
-				i--;
-			}
-
-			else if (zone_times.get(i).startsWith("ROK") || zone_times.get(i).startsWith("SST")) {
-				zone_times.remove(i);
-				i--;
-			}
-		}
-
 		String nick = event.getUser().getNick();
 		String eventMessage = event.getMessage().toLowerCase();
 		Matcher matcher = pattern.matcher( eventMessage );
@@ -104,29 +67,8 @@ public class BotListener extends ListenerAdapter {
 					}
 					break;
 
-				case "!timezones":
-					if (zone_times.size() > 0) {
-						File timezone_file = new File("timezones.txt");
-						if(!timezone_file.exists()) {
-						timezone_file.createNewFile();
-						}
-						FileOutputStream fop = null;
-						fop = new FileOutputStream(timezone_file);
-						String timezones = zone_times.toString();
-						byte[] contentinbytes = timezones.getBytes();
-						fop.write(contentinbytes);
-						fop.flush();
-						fop.close();
-						event.respondWith("Timezones file has been written to disk");
-					}
-					else {
-						event.respond("A list of timezones is not currently available");
-					}
-					break;
-
 				case "!time":
 					String current_time = config.getTime();
-					String current_tz = config.props.getProperty("timezone");
 
 					if (current_time != null) {
 						event.respondWith("The current time is " + current_time);
