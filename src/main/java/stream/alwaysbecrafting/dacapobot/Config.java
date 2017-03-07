@@ -99,7 +99,10 @@ public class Config {
 	}
 
 	public String getTime() {
-
+		if(!getTimeZones().contains(props.getProperty("timezone"))) {
+			System.out.println("Invalid timezone");
+			return null;
+		}
 		ZoneId your_zone = ZoneId.of(props.getProperty( "timezone" ));
 		String time_now = DateTimeFormatter.ofPattern("HH:mm a").format(LocalDateTime.now(your_zone));
 		return time_now;
