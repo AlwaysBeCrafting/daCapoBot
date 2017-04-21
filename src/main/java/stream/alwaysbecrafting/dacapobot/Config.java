@@ -5,7 +5,13 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.time.ZoneId;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.text.DateFormat;
+import java.util.TimeZone;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
@@ -20,7 +26,8 @@ public class Config {
 			"oauth",
 			"live_track_file",
 			"admins",
-			"db_path"
+			"db_path",
+			"timezone"
 			);
 
 
@@ -38,6 +45,7 @@ public class Config {
 					props.setProperty( "live_track_file", "location where the current track title stored." );
 					props.setProperty( "admins", "#,#" );
 					props.setProperty( "db_path", "<yourHomePathHere>/dacapobot.db");
+					props.setProperty( "timezone", "Continent/City" );
 					props.store( output, null );
 				}
 				System.err.println( "Error: Properties path not exist " + file.getCanonicalPath() + "\n\t\tCreating, please edit before next run." );
@@ -83,6 +91,22 @@ public class Config {
 
 	public List<String> getAdmins() {
 		return Arrays.asList( props.getProperty( "admins" ).toString().split( "," ) );
+	}
+
+	public List<String> getTimeZones() {
+		String[] tzones = TimeZone.getAvailableIDs();
+		Arrays.sort(tzones);
+		return Arrays.asList(tzones);
+	}
+
+	public String getTime() {
+		if(!getTimeZones().contains(props.getProperty("timezone"))) {
+			System.out.println("Invalid timezone");
+			return null;
+		}
+		ZoneId your_zone = ZoneId.of(props.getProperty( "timezone" ));
+		String time_now = DateTimeFormatter.ofPattern("HH:mm a").format(LocalDateTime.now(your_zone));
+		return time_now;
 	}
 
 	public File getTrackFile() {
